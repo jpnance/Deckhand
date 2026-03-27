@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Combo Grid — 3D Hand Visualizer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f1a; color: #e0e0e0; overflow: hidden;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    }
+
+    #controls {
+      position: absolute; top: 20px; left: 20px; z-index: 10;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    #controls label {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: #888;
+    }
+    #controls input {
+      background: #1a1a2e; border: 1px solid #333; color: #eee;
+      padding: 6px 12px; border-radius: 4px; font-family: inherit;
+      font-size: 14px; width: 320px; outline: none;
+      transition: border-color 0.2s;
+    }
+    #controls input:focus { border-color: #556; }
+    #controls input::placeholder { color: #555; }
+
+    #tooltip {
+      position: absolute; display: none;
+      background: rgba(255, 255, 255, 0.95); color: #111;
+      padding: 8px 14px; border-radius: 6px;
+      font-size: 13px; pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      line-height: 1.5;
+    }
+    #tooltip .hand-name { font-weight: bold; font-size: 16px; }
+    #tooltip .type { color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    #tooltip .combos { margin-top: 2px; }
+
+    #legend {
+      position: absolute; bottom: 20px; right: 20px;
+      display: flex; gap: 20px; font-size: 13px; color: #777;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch {
+      width: 12px; height: 12px; border-radius: 2px;
+    }
+
+    #stats {
+      position: absolute; bottom: 20px; left: 20px;
+      font-size: 13px; color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>Range <input id="rangeInput" placeholder="e.g., 88+,ATs+,KQs,AKo" spellcheck="false"></label>
+    <label>Board <input id="boardInput" placeholder="e.g., Kh 7d 2s" spellcheck="false"></label>
+    <label>Known <input id="knownInput" placeholder="e.g., Ac Td (your hand, mucked cards)" spellcheck="false"></label>
+  </div>
+
+  <div id="tooltip">
+    <div class="hand-name"></div>
+    <div class="type"></div>
+    <div class="combos"></div>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:#f0c040"></div> Pairs (6)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#40a0f0"></div> Suited (4)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:#e05535"></div> Offsuit (12)</div>
+  </div>
+
+  <div id="stats"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.162.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.162.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  // ── Range parser (inline) ──
+
+  const RANKS = ['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
+  const SUITS = ['c','d','h','s'];
+  const RI = {}; RANKS.forEach((r,i) => RI[r] = i);
+  const DR = [...RANKS].reverse();
+
+  function comboKey(c1, c2) {
+    const r1 = RI[c1[0]], r2 = RI[c2[0]];
+    if (r1 > r2) return c1 + c2;
+    if (r1 < r2) return c2 + c1;
+    return c1[1] <= c2[1] ? c1 + c2 : c2 + c1;
+  }
+
+  function pairCombos(rank) {
+    const out = [];
+    for (let i = 0; i < 4; i++) for (let j = i+1; j < 4; j++) out.push(rank+SUITS[i]+rank+SUITS[j]);
+    return out;
+  }
+  function suitedCombos(h, l) { return SUITS.map(s => h+s+l+s); }
+  function offsuitCombos(h, l) {
+    const out = [];
+    for (const a of SUITS) for (const b of SUITS) if (a !== b) out.push(h+a+l+b);
+    return out;
+  }
+  function allCombos(h, l) { return [...suitedCombos(h, l), ...offsuitCombos(h, l)]; }
+
+  function norm(a, b) {
+    a = a.toUpperCase(); b = b.toUpperCase();
+    return RI[a] >= RI[b] ? [a, b] : [b, a];
+  }
+
+  function parseToken(tok) {
+    tok = tok.trim(); if (!tok) return [];
+    let m;
+
+    m = tok.match(/^([2-9TJQKA])([cdhs])([2-9TJQKA])([cdhs])$/i);
+    if (m) return [comboKey(m[1].toUpperCase()+m[2].toLowerCase(), m[3].toUpperCase()+m[4].toLowerCase())];
+
+    m = tok.match(/^([2-9TJQKA])\1-([2-9TJQKA])\2$/i);
+    if (m) { const a=RI[m[1].toUpperCase()], b=RI[m[2].toUpperCase()], r=[]; for(let i=Math.min(a,b);i<=Math.max(a,b);i++) r.push(...pairCombos(RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])\1\+$/i);
+    if (m) { const a=RI[m[1].toUpperCase()], r=[]; for(let i=a;i<13;i++) r.push(...pairCombos(RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])\1$/i);
+    if (m) return pairCombos(m[1].toUpperCase());
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])s-([2-9TJQKA])([2-9TJQKA])s$/i);
+    if (m) { const h=norm(m[1],m[2])[0], k1=m[1].toUpperCase()===h?m[2].toUpperCase():m[1].toUpperCase(), k2=m[3].toUpperCase()===h?m[4].toUpperCase():m[3].toUpperCase(); const lo=Math.min(RI[k1],RI[k2]), hi=Math.max(RI[k1],RI[k2]), r=[]; for(let i=lo;i<=hi;i++) r.push(...suitedCombos(h,RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])s\+$/i);
+    if (m) { const [h,l]=norm(m[1],m[2]), r=[]; for(let i=RI[l];i<RI[h];i++) r.push(...suitedCombos(h,RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])s$/i);
+    if (m) { const [h,l]=norm(m[1],m[2]); return suitedCombos(h,l); }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])o-([2-9TJQKA])([2-9TJQKA])o$/i);
+    if (m) { const h=norm(m[1],m[2])[0], k1=m[1].toUpperCase()===h?m[2].toUpperCase():m[1].toUpperCase(), k2=m[3].toUpperCase()===h?m[4].toUpperCase():m[3].toUpperCase(); const lo=Math.min(RI[k1],RI[k2]), hi=Math.max(RI[k1],RI[k2]), r=[]; for(let i=lo;i<=hi;i++) r.push(...offsuitCombos(h,RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])o\+$/i);
+    if (m) { const [h,l]=norm(m[1],m[2]), r=[]; for(let i=RI[l];i<RI[h];i++) r.push(...offsuitCombos(h,RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])o$/i);
+    if (m) { const [h,l]=norm(m[1],m[2]); return offsuitCombos(h,l); }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])\+$/i);
+    if (m) { const r1=m[1].toUpperCase(), r2=m[2].toUpperCase(); if(r1===r2){const r=[];for(let i=RI[r1];i<13;i++)r.push(...pairCombos(RANKS[i]));return r;} const [h,l]=norm(r1,r2), r=[]; for(let i=RI[l];i<RI[h];i++) r.push(...allCombos(h,RANKS[i])); return r; }
+
+    m = tok.match(/^([2-9TJQKA])([2-9TJQKA])$/i);
+    if (m) { const r1=m[1].toUpperCase(), r2=m[2].toUpperCase(); if(r1===r2) return pairCombos(r1); const [h,l]=norm(r1,r2); return allCombos(h,l); }
+
+    return [];
+  }
+
+  function parseRange(str) {
+    const s = new Set();
+    for (const t of str.split(',')) for (const c of parseToken(t)) s.add(c);
+    return s;
+  }
+
+  function parseBoard(str) {
+    if (!str.trim()) return [];
+    return str.trim().split(/\s+/).map(s => {
+      if (s.length !== 2) return null;
+      const r = s[0].toUpperCase(), su = s[1].toLowerCase();
+      if (!(r in RI) || !SUITS.includes(su)) return null;
+      return r + su;
+    }).filter(Boolean);
+  }
+
+  function getCellData(row, col, rangeSet, boardCards) {
+    const r1 = DR[row], r2 = DR[col];
+    let handName, hc, type;
+    if (row === col) { handName = r1+r2; hc = pairCombos(r1); type = 'pair'; }
+    else if (row < col) { handName = r1+r2+'s'; hc = suitedCombos(r1, r2); type = 'suited'; }
+    else { handName = r2+r1+'o'; hc = offsuitCombos(r2, r1); type = 'offsuit'; }
+
+    const bs = new Set(boardCards);
+    const avail = hc.filter(c => !bs.has(c.substring(0,2)) && !bs.has(c.substring(2,4)));
+    const inRange = rangeSet ? avail.filter(c => rangeSet.has(c)).length : avail.length;
+
+    return { handName, type, inRange, available: avail.length, total: hc.length };
+  }
+
+  // ── Three.js scene ──
+
+  const TYPE_COLORS = { pair: 0xf0c040, suited: 0x40a0f0, offsuit: 0xe05535 };
+  const DIM_COLOR = 0x282838;
+  const SCALE = 0.45;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0f0f1a);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
+  camera.position.set(0, 22, 20);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  document.body.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0x404060, 1.5);
+  scene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  dirLight.position.set(8, 20, 12);
+  scene.add(dirLight);
+  const fillLight = new THREE.DirectionalLight(0x8888cc, 0.4);
+  fillLight.position.set(-10, 10, -8);
+  scene.add(fillLight);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 2, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.maxPolarAngle = Math.PI / 2.1;
+  controls.update();
+
+  const gridHelper = new THREE.GridHelper(13, 13, 0x333348, 0x222235);
+  scene.add(gridHelper);
+
+  // ── Bars ──
+
+  const barGeo = new THREE.BoxGeometry(0.82, 1, 0.82);
+  const bars = [];
+  const barMeshes = [];
+
+  for (let row = 0; row < 13; row++) {
+    for (let col = 0; col < 13; col++) {
+      const type = row === col ? 'pair' : row < col ? 'suited' : 'offsuit';
+      const mat = new THREE.MeshStandardMaterial({
+        color: TYPE_COLORS[type],
+        transparent: true,
+        opacity: 1,
+        roughness: 0.4,
+        metalness: 0.1,
+      });
+      const mesh = new THREE.Mesh(barGeo, mat);
+      const x = col - 6;
+      const z = row - 6;
+      mesh.position.set(x, 0.5, z);
+      scene.add(mesh);
+
+      const data = getCellData(row, col, null, []);
+      const entry = { mesh, row, col, type, handName: data.handName };
+      bars.push(entry);
+      barMeshes.push(mesh);
+    }
+  }
+
+  // ── Labels ──
+
+  function makeLabel(text) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#999';
+    ctx.font = 'bold 42px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 32, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+    sprite.scale.set(0.7, 0.7, 1);
+    return sprite;
+  }
+
+  for (let i = 0; i < 13; i++) {
+    const colLabel = makeLabel(DR[i]);
+    colLabel.position.set(i - 6, 0.05, -7.2);
+    scene.add(colLabel);
+
+    const rowLabel = makeLabel(DR[i]);
+    rowLabel.position.set(-7.2, 0.05, i - 6);
+    scene.add(rowLabel);
+  }
+
+  // ── Update bars from inputs ──
+
+  function updateBars() {
+    const rangeStr = document.getElementById('rangeInput').value.trim();
+    const boardStr = document.getElementById('boardInput').value.trim();
+    const knownStr = document.getElementById('knownInput').value.trim();
+    const rangeSet = rangeStr ? parseRange(rangeStr) : null;
+    const boardCards = [...parseBoard(boardStr), ...parseBoard(knownStr)];
+
+    let totalInRange = 0;
+    let totalAvailable = 0;
+
+    for (let row = 0; row < 13; row++) {
+      for (let col = 0; col < 13; col++) {
+        const idx = row * 13 + col;
+        const bar = bars[idx];
+        const data = getCellData(row, col, rangeSet, boardCards);
+        bar.handName = data.handName;
+
+        totalAvailable += data.available;
+
+        const count = rangeSet ? data.inRange : data.available;
+        totalInRange += rangeSet ? data.inRange : data.available;
+        const height = Math.max(count * SCALE, 0.04);
+
+        bar.mesh.scale.y = height;
+        bar.mesh.position.y = height / 2;
+
+        if (rangeSet && data.inRange === 0) {
+          bar.mesh.material.color.setHex(DIM_COLOR);
+          bar.mesh.material.opacity = 0.35;
+        } else {
+          bar.mesh.material.color.setHex(TYPE_COLORS[data.type]);
+          bar.mesh.material.opacity = 1;
+        }
+
+        bar.currentData = data;
+      }
+    }
+
+    const statsEl = document.getElementById('stats');
+    if (rangeSet) {
+      const pct = totalAvailable > 0 ? ((totalInRange / totalAvailable) * 100).toFixed(1) : '0';
+      statsEl.textContent = `${totalInRange} combos in range (${pct}% of ${totalAvailable})`;
+    } else {
+      statsEl.textContent = `${totalAvailable} total combos`;
+    }
+  }
+
+  updateBars();
+
+  document.getElementById('rangeInput').addEventListener('input', updateBars);
+  document.getElementById('boardInput').addEventListener('input', updateBars);
+  document.getElementById('knownInput').addEventListener('input', updateBars);
+
+  // ── Hover tooltip ──
+
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  const tooltip = document.getElementById('tooltip');
+  let hoveredBar = null;
+
+  renderer.domElement.addEventListener('mousemove', (e) => {
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(barMeshes);
+
+    if (hits.length > 0) {
+      const mesh = hits[0].object;
+      const bar = bars[barMeshes.indexOf(mesh)];
+      if (bar) {
+        const d = bar.currentData || {};
+        tooltip.querySelector('.hand-name').textContent = bar.handName;
+        tooltip.querySelector('.type').textContent = bar.type;
+        const rangeStr = document.getElementById('rangeInput').value.trim();
+        if (rangeStr) {
+          tooltip.querySelector('.combos').textContent =
+            `${d.inRange} / ${d.available} combos in range`;
+        } else {
+          tooltip.querySelector('.combos').textContent =
+            `${d.available} combos available`;
+        }
+        tooltip.style.display = 'block';
+        tooltip.style.left = (e.clientX + 16) + 'px';
+        tooltip.style.top = (e.clientY - 10) + 'px';
+
+        if (hoveredBar && hoveredBar !== mesh) {
+          hoveredBar.material.emissive.setHex(0x000000);
+        }
+        mesh.material.emissive.setHex(0x222222);
+        hoveredBar = mesh;
+      }
+    } else {
+      tooltip.style.display = 'none';
+      if (hoveredBar) {
+        hoveredBar.material.emissive.setHex(0x000000);
+        hoveredBar = null;
+      }
+    }
+  });
+
+  renderer.domElement.addEventListener('mouseleave', () => {
+    tooltip.style.display = 'none';
+    if (hoveredBar) {
+      hoveredBar.material.emissive.setHex(0x000000);
+      hoveredBar = null;
+    }
+  });
+
+  // ── Resize ──
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // ── Animate ──
+
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+  </script>
+</body>
+</html>
