@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preflop Trainer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #d8e4db;
+      --bg-card: #ffffff;
+      --bg-muted: #e0e8e2;
+      --text-primary: #2d3a2e;
+      --text-muted: #6b7c6d;
+      --accent-purple: #7c5cbf;
+      --accent-green: #4a9960;
+      --accent-red: #c94a4a;
+      --accent-blue: #4a7fc9;
+    }
+    body {
+      background: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+    
+    .card-display {
+      font-size: 1.5rem;
+      font-weight: bold;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.5rem;
+      background: #fff;
+      display: inline-block;
+      margin: 0.25rem;
+      min-width: 2.5rem;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border: 1px solid #ddd;
+    }
+    .card-display.red { color: #dc3545; }
+    .card-display.black { color: #212529; }
+    
+    .position-seat {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      min-width: 60px;
+      font-size: 0.85rem;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .position-seat.you {
+      background: var(--accent-blue);
+      color: white;
+      font-weight: bold;
+    }
+    .position-seat.raiser {
+      background: var(--accent-purple);
+      color: white;
+    }
+    .position-seat.caller {
+      background: var(--accent-green);
+      color: white;
+    }
+    .position-seat.folded {
+      background: var(--bg-muted);
+      color: var(--text-muted);
+    }
+    .position-seat.waiting {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+    
+    .action-btn {
+      font-size: 1.1rem;
+      padding: 0.75rem 1.5rem;
+      min-width: 100px;
+    }
+    .btn-fold {
+      background: var(--bg-card);
+      border-color: var(--bg-muted);
+      color: var(--text-primary);
+    }
+    .btn-fold:hover { background: #c8d4cb; border-color: #c8d4cb; }
+    .btn-call {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      color: white;
+    }
+    .btn-call:hover { background: #3f8552; border-color: #3f8552; color: white; }
+    .btn-raise {
+      background: var(--accent-purple);
+      border-color: var(--accent-purple);
+      color: white;
+    }
+    .btn-raise:hover { background: #6b4faa; border-color: #6b4faa; color: white; }
+    .btn-again {
+      background: #4a7fc9;
+      border-color: #4a7fc9;
+      color: white;
+    }
+    .btn-again:hover { background: #3d6db3; border-color: #3d6db3; color: white; }
+    
+    .villain-read {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+    
+    .stats-bar {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    /* Review Mode */
+    .scenario-btn {
+      background: var(--bg-muted);
+      border: 1px solid var(--bg-muted);
+      color: var(--text-muted);
+    }
+    .scenario-btn:hover {
+      background: #ccd6cf;
+    }
+    .scenario-btn.scenario-missed {
+      background: #f0d8a8;
+      border-color: #e0c890;
+      color: #705818;
+    }
+    .scenario-btn.scenario-missed:hover {
+      background: #e8d098;
+    }
+    .scenario-btn.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: white;
+    }
+    .scenario-btn.active:hover {
+      background: #3d6db3;
+    }
+    
+    .mistakes-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+    @media (min-width: 768px) {
+      .mistakes-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 992px) {
+      .mistakes-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+    @media (min-width: 1400px) {
+      .mistakes-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    }
+    .mistake-row {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .mistake-row.highlighted {
+      outline: 2px solid var(--accent-blue);
+    }
+    .mistake-hand {
+      font-weight: bold;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+    .mistake-scenario {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+    .mistake-answer {
+      color: var(--accent-red);
+    }
+    .mistake-correct {
+      color: var(--accent-green);
+    }
+    
+    /* Grid */
+    .grid-cell {
+      font-size: 0.65rem;
+      padding: 3px 1px;
+      text-align: center;
+      border-radius: 2px;
+      font-family: monospace;
+    }
+    .grid-cell.action-r, .grid-cell.action-3 { 
+      background: var(--accent-purple); 
+      color: white; 
+    }
+    .grid-cell.action-c { 
+      background: var(--accent-green); 
+      color: white; 
+    }
+    .grid-cell.action-f { 
+      background: var(--bg-muted); 
+      color: var(--text-muted); 
+    }
+    
+    @media (max-width: 576px) {
+      .position-seat { min-width: 42px; font-size: 0.7rem; padding: 0.3rem; }
+      .card-display { font-size: 1.25rem; padding: 0.4rem 0.6rem; }
+      .action-btn { padding: 0.6rem 1rem; font-size: 1rem; min-width: 80px; }
+      .grid-cell { font-size: 0.55rem; padding: 2px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div x-data="preflopTrainer()" class="container py-4">
+    
+    <!-- Header / Stats -->
+    <template x-if="mode === 'quiz'">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0">Preflop Trainer</h5>
+        <div class="stats-bar d-flex align-items-center gap-3">
+          <span style="color: var(--text-muted)" x-text="`Hand ${total + 1}`"></span>
+          <button class="btn btn-sm scenario-btn" @click="endSession()" title="End session (Q)">
+            End
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Quiz Mode -->
+    <template x-if="mode === 'quiz'">
+      <div>
+        <!-- Table Display -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+          <template x-for="(pos, i) in positions" :key="i">
+            <div class="position-seat"
+                 :class="{
+                   'you': i === yourPosition,
+                   'raiser': i === raiserPosition,
+                   'caller': callerPositions.includes(i),
+                   'folded': i < yourPosition && i !== raiserPosition && !callerPositions.includes(i),
+                   'waiting': i > yourPosition
+                 }">
+              <div x-text="pos"></div>
+              <div class="small">
+                <span x-show="i === yourPosition">?</span>
+                <span x-show="i === raiserPosition">raise</span>
+                <span x-show="callerPositions.includes(i)">call</span>
+                <span x-show="i < yourPosition && i !== raiserPosition && !callerPositions.includes(i)">fold</span>
+                <span x-show="i > yourPosition">-</span>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Villain Read -->
+        <div class="text-center villain-read mb-3">
+          <span x-html="villainRead || '&nbsp;'"></span>
+        </div>
+
+        <!-- Your Hand -->
+        <div class="text-center mb-4">
+          <span class="card-display" :class="card1Color" x-text="card1"></span>
+          <span class="card-display" :class="card2Color" x-text="card2"></span>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+          <button class="btn btn-fold action-btn" 
+                  x-show="availableActions.includes('f')"
+                  @click="submitAnswer('f')"><u>F</u>old</button>
+          <button class="btn btn-call action-btn" 
+                  x-show="availableActions.includes('c')"
+                  @click="submitAnswer('c')" 
+                  x-html="scenarioKey === 'BB:LP' ? '<u>C</u>heck' : '<u>C</u>all'"></button>
+          <button class="btn btn-raise action-btn" 
+                  x-show="availableActions.includes('r')"
+                  @click="submitAnswer('r')"><u>R</u>aise</button>
+          <button class="btn btn-raise action-btn" 
+                  x-show="availableActions.includes('3')"
+                  @click="submitAnswer('3')"><u>R</u>e-raise</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Review Mode -->
+    <template x-if="mode === 'review'">
+      <div>
+        <h4 class="text-center mb-4">
+          Session Complete: <span x-text="`${correct}/${total} (${Math.round(correct/total*100)}%)`"></span>
+        </h4>
+
+        <!-- Mistakes -->
+        <div x-show="mistakes.length > 0" class="mb-4">
+          <h5 class="mb-3">Mistakes</h5>
+          <div class="mistakes-grid">
+            <template x-for="(m, i) in mistakes" :key="i">
+              <div class="mistake-row" 
+                   :class="{'highlighted': selectedScenario === m.scenarioKey}"
+                   @click="selectedScenario = m.scenarioKey"
+                   style="cursor: pointer;">
+                <div>
+                  <span class="mistake-hand" x-text="m.hand"></span>
+                  <span class="mistake-scenario ms-2" x-text="SCENARIO_LABELS[m.scenarioKey]"></span>
+                </div>
+                <div>
+                  <span class="mistake-answer" x-text="actionLabel(m.answered, m.scenarioKey)"></span>
+                  <span class="mx-1" style="color: var(--text-muted)">→</span>
+                  <span class="mistake-correct" x-text="actionLabel(m.expected, m.scenarioKey)"></span>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <div x-show="mistakes.length === 0" class="text-center mb-4" style="color: var(--accent-green)">
+          <h5>Perfect session! No mistakes.</h5>
+        </div>
+
+        <!-- Scenario Grid Selector -->
+        <h5 class="mb-3">View Range Grid</h5>
+        <div class="row g-2 mb-4">
+          <template x-for="key in SCENARIO_KEYS" :key="key">
+            <div class="col-6 col-md-4 col-lg-3">
+              <button class="btn scenario-btn w-100 btn-sm"
+                      :class="{
+                        'active': selectedScenario === key,
+                        'scenario-missed': stats[key]?.total > 0 && stats[key].correct !== stats[key].total
+                      }"
+                      @click="selectedScenario = selectedScenario === key ? null : key"
+                      x-text="SCENARIO_LABELS[key]">
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <!-- Range Grid -->
+        <div x-show="selectedScenario" class="mb-4">
+          <h6 x-text="SCENARIO_LABELS[selectedScenario]" class="text-center mb-2"></h6>
+          <div class="d-flex justify-content-center">
+            <div style="display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; max-width: 400px; width: 100%;">
+              <template x-for="cell in gridCells" :key="cell.idx">
+                <div class="grid-cell" 
+                     :class="'action-' + getGridAction(cell.row, cell.col)"
+                     x-text="cell.hand"></div>
+              </template>
+            </div>
+          </div>
+          <div class="text-center mt-3 small" style="color: var(--text-muted)">
+            <span class="badge me-1" style="background: var(--accent-purple)">raise/3-bet</span>
+            <span class="badge me-1" style="background: var(--accent-green)">call</span>
+            <span class="badge" style="background: var(--bg-muted); color: var(--text-muted)">fold</span>
+          </div>
+        </div>
+
+        <!-- Play Again -->
+        <div class="text-center mt-4">
+          <button class="btn btn-again btn-lg" @click="startNewSession()">Play Again</button>
+        </div>
+      </div>
+    </template>
+
+  </div>
+
+  <script src="data.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+  <script>
+    function preflopTrainer() {
+      // Pre-compute grid cells in correct order (AA top-left, 22 bottom-right)
+      const gridCells = [];
+      for (let row = 0; row < 13; row++) {
+        for (let col = 0; col < 13; col++) {
+          let hand;
+          if (row === col) {
+            hand = RANKS[row] + RANKS[col];
+          } else if (row < col) {
+            hand = RANKS[row] + RANKS[col] + 's';
+          } else {
+            hand = RANKS[col] + RANKS[row] + 'o';
+          }
+          gridCells.push({ idx: row * 13 + col, row, col, hand });
+        }
+      }
+      
+      return {
+        mode: 'quiz',
+        positions: POSITIONS,
+        gridCells,
+        
+        // Current question state
+        scenarioKey: null,
+        hand: null,
+        yourPosition: 0,
+        raiserPosition: -1,
+        callerPositions: [],
+        card1: '',
+        card2: '',
+        card1Color: 'black',
+        card2Color: 'black',
+        villainRead: '',
+        availableActions: [],
+        correctAction: '',
+        
+        // Session stats
+        correct: 0,
+        total: 0,
+        mistakes: [],
+        stats: {},
+        selectedScenario: null,
+        
+        // Constants
+        SCENARIO_LABELS,
+        SCENARIO_KEYS,
+        
+        init() {
+          SCENARIO_KEYS.forEach(k => this.stats[k] = { correct: 0, total: 0 });
+          this.nextQuestion();
+          
+          document.addEventListener('keydown', (e) => {
+            if (this.mode !== 'quiz') return;
+            
+            const key = e.key.toLowerCase();
+            if (key === 'f' && this.availableActions.includes('f')) {
+              this.submitAnswer('f');
+            } else if (key === 'c' && this.availableActions.includes('c')) {
+              this.submitAnswer('c');
+            } else if (key === 'r') {
+              if (this.availableActions.includes('r')) this.submitAnswer('r');
+              else if (this.availableActions.includes('3')) this.submitAnswer('3');
+            } else if (key === 'q' || key === 'escape') {
+              this.endSession();
+            }
+          });
+        },
+        
+        endSession() {
+          if (this.total === 0) return;
+          this.mode = 'review';
+        },
+        
+        pickRandom(arr) {
+          return arr[Math.floor(Math.random() * arr.length)];
+        },
+        
+        getPositionIndex(pos, situation) {
+          switch(pos) {
+            case 'EP':
+              if (situation === 'vs_weak' || situation === 'vs_strong') {
+                return this.pickRandom([1, 2, 3]);
+              }
+              return 0;
+            case 'CO': return 5;
+            case 'BTN': return 6;
+            case 'SB': return 7;
+            case 'BB': return 8;
+            default: return 0;
+          }
+        },
+        
+        nextQuestion() {
+          this.hand = this.pickRandom(HAND_LIST);
+          this.scenarioKey = this.pickRandom(SCENARIO_KEYS);
+          
+          const scenario = SCENARIOS[this.scenarioKey];
+          this.correctAction = HANDS[this.hand][this.scenarioKey];
+          this.availableActions = scenario.actions.split('');
+          
+          this.yourPosition = this.getPositionIndex(scenario.position, scenario.situation);
+          
+          // Set up raiser/callers
+          this.raiserPosition = -1;
+          this.callerPositions = [];
+          
+          if (scenario.situation === 'vs_steal') {
+            this.raiserPosition = this.pickRandom([5, 6]);
+            this.villainRead = `${POSITIONS[this.raiserPosition]} steal attempt`;
+          } else if (scenario.situation === 'vs_weak' || scenario.situation === 'vs_strong') {
+            const earlier = [];
+            for (let i = 0; i < this.yourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.raiserPosition = this.pickRandom(earlier);
+            this.villainRead = scenario.situation === 'vs_weak' 
+              ? `${POSITIONS[this.raiserPosition]} is loose` 
+              : `${POSITIONS[this.raiserPosition]} is tight`;
+          } else if (scenario.situation === 'limped') {
+            this.villainRead = '';
+            for (let i = 0; i < this.yourPosition; i++) {
+              if (Math.random() < 0.5 || this.callerPositions.length === 0) {
+                this.callerPositions.push(i);
+              }
+            }
+            if (this.callerPositions.length === 0 && this.yourPosition > 0) {
+              this.callerPositions.push(this.yourPosition - 1);
+            }
+          }
+          
+          this.formatHand();
+        },
+        
+        formatHand() {
+          const ranks = this.hand.replace(/[so]/g, '');
+          const suited = this.hand.includes('s');
+          const r1 = ranks[0], r2 = ranks[1] || ranks[0];
+          
+          const suits = ['♠', '♥', '♦', '♣'];
+          let s1, s2;
+          
+          if (r1 === r2) {
+            s1 = this.pickRandom(suits);
+            s2 = this.pickRandom(suits.filter(s => s !== s1));
+          } else if (suited) {
+            s1 = s2 = this.pickRandom(suits);
+          } else {
+            s1 = this.pickRandom(suits);
+            s2 = this.pickRandom(suits.filter(s => s !== s1));
+          }
+          
+          this.card1 = r1 + s1;
+          this.card2 = r2 + s2;
+          this.card1Color = (s1 === '♥' || s1 === '♦') ? 'red' : 'black';
+          this.card2Color = (s2 === '♥' || s2 === '♦') ? 'red' : 'black';
+        },
+        
+        submitAnswer(action) {
+          const isCorrect = action === this.correctAction;
+          
+          this.stats[this.scenarioKey].total++;
+          if (isCorrect) {
+            this.stats[this.scenarioKey].correct++;
+            this.correct++;
+          } else {
+            this.mistakes.push({
+              hand: this.hand,
+              scenarioKey: this.scenarioKey,
+              answered: action,
+              expected: this.correctAction
+            });
+          }
+          this.total++;
+          
+          if (this.total >= 100) {
+            this.mode = 'review';
+          } else {
+            this.nextQuestion();
+          }
+        },
+        
+        actionLabel(action, scenario = null) {
+          const labels = { f: 'Fold', c: 'Call', r: 'Raise', '3': '3-Bet' };
+          const key = scenario || this.scenarioKey;
+          if (key === 'BB:LP' && action === 'c') return 'Check';
+          return labels[action] || action;
+        },
+        
+        startNewSession() {
+          this.mode = 'quiz';
+          this.correct = 0;
+          this.total = 0;
+          this.mistakes = [];
+          this.selectedScenario = null;
+          SCENARIO_KEYS.forEach(k => this.stats[k] = { correct: 0, total: 0 });
+          this.nextQuestion();
+        },
+        
+        getGridAction(row, col) {
+          let hand;
+          if (row === col) {
+            hand = RANKS[row] + RANKS[col];
+          } else if (row < col) {
+            hand = RANKS[row] + RANKS[col] + 's';
+          } else {
+            hand = RANKS[col] + RANKS[row] + 'o';
+          }
+          return HANDS[hand]?.[this.selectedScenario] || 'f';
+        }
+      };
+    }
+  </script>
+</body>
+</html>
