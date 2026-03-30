@@ -3,19 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preflop Trainer</title>
+  <title>Preflop Range Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
+      /* Backgrounds */
       --bg-main: #d8e4db;
       --bg-card: #ffffff;
       --bg-muted: #e0e8e2;
+      
+      /* Text */
       --text-primary: #2d3a2e;
       --text-muted: #6b7c6d;
-      --accent-purple: #7c5cbf;
-      --accent-green: #4a9960;
-      --accent-red: #c94a4a;
-      --accent-blue: #4a7fc9;
+      
+      /* Actions (semantic poker) */
+      --action-raise: #7c5cbf;
+      --action-raise-hover: #6b4faa;
+      --action-call: #4a9960;
+      --action-call-hover: #3f8552;
+      --action-fold: #c8d4cb;
+      --action-fold-hover: #b8c4bb;
+      
+      /* Accents */
+      --accent-primary: #4a7fc9;
+      --accent-primary-hover: #3d6db3;
+      --accent-selection: #4a7fc9;
+      --accent-warning: #c94a4a;
+      
+      /* Cards */
+      --card-red: #dc3545;
+      --card-black: #212529;
+      
+      /* Misc */
+      --row-highlight: #f5f0e6;
+      --border-light: #ddd;
+    }
+    
+    /* Color Schemes */
+    [data-scheme="sage"] {
+      --bg-main: #d8e4db; --bg-card: #ffffff; --bg-muted: #e0e8e2;
+      --text-primary: #2d3a2e; --text-muted: #6b7c6d;
+      --action-raise: #7c5cbf; --action-raise-hover: #6b4faa;
+      --action-call: #4a9960; --action-call-hover: #3f8552;
+      --action-fold: #c8d4cb; --action-fold-hover: #b8c4bb;
+      --accent-primary: #4a7fc9; --accent-primary-hover: #3d6db3;
+      --accent-selection: #4a7fc9; --accent-warning: #c94a4a;
+      --card-red: #dc3545; --card-black: #212529;
+      --row-highlight: #f5f0e6; --border-light: #bbc4bd;
+    }
+    [data-scheme="ocean"] {
+      --bg-main: #e3eef5; --bg-card: #ffffff; --bg-muted: #cfe0eb;
+      --text-primary: #1a3a4a; --text-muted: #5a7a8a;
+      --action-raise: #e85d75; --action-raise-hover: #d14d65;
+      --action-call: #2a9d8f; --action-call-hover: #238b7f;
+      --action-fold: #b8d4e3; --action-fold-hover: #a5c5d6;
+      --accent-primary: #457b9d; --accent-primary-hover: #386a89;
+      --accent-selection: #457b9d; --accent-warning: #e76f51;
+      --card-red: #e63946; --card-black: #1d3557;
+      --row-highlight: #fdf6e3; --border-light: #a8c5d6;
+    }
+    [data-scheme="sunset"] {
+      --bg-main: #fef3e2; --bg-card: #ffffff; --bg-muted: #fce4c4;
+      --text-primary: #4a3728; --text-muted: #8a7768;
+      --action-raise: #d64045; --action-raise-hover: #c03035;
+      --action-call: #5fa55a; --action-call-hover: #4f954a;
+      --action-fold: #f5dfc4; --action-fold-hover: #e8cfb0;
+      --accent-primary: #f4a261; --accent-primary-hover: #e89245;
+      --accent-selection: #e76f51; --accent-warning: #d64045;
+      --card-red: #c03035; --card-black: #3d2c22;
+      --row-highlight: #fff8f0; --border-light: #e0c9a8;
+    }
+    [data-scheme="lavender"] {
+      --bg-main: #f0e6f6; --bg-card: #ffffff; --bg-muted: #e2d4eb;
+      --text-primary: #3a2d45; --text-muted: #7a6d8a;
+      --action-raise: #ff6b6b; --action-raise-hover: #e85555;
+      --action-call: #4ecdc4; --action-call-hover: #3dbdb4;
+      --action-fold: #d4c6de; --action-fold-hover: #c4b6ce;
+      --accent-primary: #9b5de5; --accent-primary-hover: #8a4dd4;
+      --accent-selection: #9b5de5; --accent-warning: #f15bb5;
+      --card-red: #f15bb5; --card-black: #2a1f35;
+      --row-highlight: #faf5ff; --border-light: #c8b8d6;
+    }
+    [data-scheme="mint"] {
+      --bg-main: #e0f5f0; --bg-card: #ffffff; --bg-muted: #c2e8e0;
+      --text-primary: #1f4a42; --text-muted: #5a8a82;
+      --action-raise: #e36588; --action-raise-hover: #d35578;
+      --action-call: #38b2a0; --action-call-hover: #2aa292;
+      --action-fold: #b8ddd5; --action-fold-hover: #a5cfc5;
+      --accent-primary: #6eb5a8; --accent-primary-hover: #5ea598;
+      --accent-selection: #38b2a0; --accent-warning: #e36588;
+      --card-red: #e36588; --card-black: #1a3a32;
+      --row-highlight: #f5fffc; --border-light: #a8d5ca;
+    }
+    [data-scheme="coral"] {
+      --bg-main: #ffeee8; --bg-card: #ffffff; --bg-muted: #ffd9cc;
+      --text-primary: #4a2c25; --text-muted: #8a6c65;
+      --action-raise: #7c3aed; --action-raise-hover: #6c2add;
+      --action-call: #10b981; --action-call-hover: #0da572;
+      --action-fold: #ffc9b8; --action-fold-hover: #ffb8a5;
+      --accent-primary: #f97316; --accent-primary-hover: #e86306;
+      --accent-selection: #f97316; --accent-warning: #ef4444;
+      --card-red: #ef4444; --card-black: #3a1c15;
+      --row-highlight: #fff8f5; --border-light: #e8c0b0;
+    }
+    [data-scheme="forest"] {
+      --bg-main: #e8f0e8; --bg-card: #ffffff; --bg-muted: #d0e0d0;
+      --text-primary: #2a3a2a; --text-muted: #5a6a5a;
+      --action-raise: #c44569; --action-raise-hover: #b43559;
+      --action-call: #2d6a4f; --action-call-hover: #235a3f;
+      --action-fold: #c0d4c0; --action-fold-hover: #b0c4b0;
+      --accent-primary: #588157; --accent-primary-hover: #487047;
+      --accent-selection: #588157; --accent-warning: #c44569;
+      --card-red: #c44569; --card-black: #1a2a1a;
+      --row-highlight: #f5f8f5; --border-light: #a8c0a8;
+    }
+    [data-scheme="sand"] {
+      --bg-main: #f5f0e8; --bg-card: #ffffff; --bg-muted: #e8e0d0;
+      --text-primary: #3a3525; --text-muted: #7a7565;
+      --action-raise: #be4bdb; --action-raise-hover: #ae3bcb;
+      --action-call: #37b24d; --action-call-hover: #2da23d;
+      --action-fold: #e0d8c8; --action-fold-hover: #d0c8b8;
+      --accent-primary: #f59f00; --accent-primary-hover: #e58f00;
+      --accent-selection: #f59f00; --accent-warning: #f03e3e;
+      --card-red: #f03e3e; --card-black: #2a2515;
+      --row-highlight: #faf8f2; --border-light: #c8c0a8;
+    }
+    [data-scheme="slate"] {
+      --bg-main: #e8ecf0; --bg-card: #ffffff; --bg-muted: #d0d8e0;
+      --text-primary: #2a3545; --text-muted: #5a6575;
+      --action-raise: #e64980; --action-raise-hover: #d63970;
+      --action-call: #12b886; --action-call-hover: #0da876;
+      --action-fold: #c8d0d8; --action-fold-hover: #b8c0c8;
+      --accent-primary: #4c6ef5; --accent-primary-hover: #3c5ee5;
+      --accent-selection: #4c6ef5; --accent-warning: #fa5252;
+      --card-red: #fa5252; --card-black: #1a2535;
+      --row-highlight: #f5f8fa; --border-light: #b0b8c0;
+    }
+    [data-scheme="rose"] {
+      --bg-main: #fce8ec; --bg-card: #ffffff; --bg-muted: #f5d0d8;
+      --text-primary: #4a252d; --text-muted: #8a656d;
+      --action-raise: #7048e8; --action-raise-hover: #6038d8;
+      --action-call: #20c997; --action-call-hover: #18b987;
+      --action-fold: #f0c8d0; --action-fold-hover: #e0b8c0;
+      --accent-primary: #e64980; --accent-primary-hover: #d63970;
+      --accent-selection: #e64980; --accent-warning: #ff6b6b;
+      --card-red: #ff6b6b; --card-black: #3a151d;
+      --row-highlight: #fff5f8; --border-light: #d8b0b8;
     }
     body {
       background: var(--bg-main);
@@ -24,20 +157,46 @@
     }
     
     .card-display {
-      font-size: 1.5rem;
-      font-weight: bold;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
-      background: #fff;
-      display: inline-block;
-      margin: 0.25rem;
-      min-width: 2.5rem;
-      text-align: center;
+      width: 60px;
+      height: 72px;
+      border-radius: 6px;
+      background: var(--bg-card);
       box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      border: 1px solid #ddd;
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 6px;
     }
-    .card-display.red { color: #dc3545; }
-    .card-display.black { color: #212529; }
+    .card-display .card-rank {
+      font-size: 1.25rem;
+      font-weight: bold;
+      line-height: 0.8;
+      align-self: flex-start;
+    }
+    .card-display .card-suit {
+      align-self: flex-end;
+    }
+    .card-display .card-suit svg {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+    .card-display.red { color: var(--card-red); }
+    .card-display.black { color: var(--card-black); }
+    
+    @media (max-width: 576px) {
+      .card-display {
+        width: 50px;
+        height: 70px;
+      }
+      .card-display .card-rank {
+        font-size: 1rem;
+      }
+      .card-display .card-suit {
+        font-size: 2.4rem;
+      }
+    }
     
     .position-seat {
       padding: 0.5rem;
@@ -50,26 +209,26 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .position-seat.you {
-      background: var(--accent-blue);
+      background: var(--accent-primary);
       color: white;
       font-weight: bold;
     }
     .position-seat.raiser {
-      background: var(--accent-purple);
+      background: var(--action-raise);
       color: white;
     }
     .position-seat.caller {
-      background: var(--accent-green);
+      background: var(--action-call);
       color: white;
     }
     .position-seat.folded {
-      background: var(--bg-muted);
-      color: var(--text-muted);
-    }
-    .position-seat.waiting {
       background: var(--bg-card);
       color: var(--text-muted);
       opacity: 0.5;
+    }
+    .position-seat.waiting {
+      background: var(--bg-muted);
+      color: var(--text-muted);
     }
     
     .action-btn {
@@ -78,29 +237,29 @@
       min-width: 100px;
     }
     .btn-fold {
-      background: var(--bg-card);
-      border-color: var(--bg-muted);
+      background: var(--action-fold);
+      border-color: var(--action-fold);
       color: var(--text-primary);
     }
-    .btn-fold:hover { background: #c8d4cb; border-color: #c8d4cb; }
+    .btn-fold:hover { background: var(--action-fold-hover); border-color: var(--action-fold-hover); }
     .btn-call {
-      background: var(--accent-green);
-      border-color: var(--accent-green);
+      background: var(--action-call);
+      border-color: var(--action-call);
       color: white;
     }
-    .btn-call:hover { background: #3f8552; border-color: #3f8552; color: white; }
+    .btn-call:hover { background: var(--action-call-hover); border-color: var(--action-call-hover); color: white; }
     .btn-raise {
-      background: var(--accent-purple);
-      border-color: var(--accent-purple);
+      background: var(--action-raise);
+      border-color: var(--action-raise);
       color: white;
     }
-    .btn-raise:hover { background: #6b4faa; border-color: #6b4faa; color: white; }
-    .btn-again {
-      background: #4a7fc9;
-      border-color: #4a7fc9;
+    .btn-raise:hover { background: var(--action-raise-hover); border-color: var(--action-raise-hover); color: white; }
+    .btn-primary-action {
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
       color: white;
     }
-    .btn-again:hover { background: #3d6db3; border-color: #3d6db3; color: white; }
+    .btn-primary-action:hover { background: var(--accent-primary-hover); border-color: var(--accent-primary-hover); color: white; }
     
     .villain-read {
       font-size: 0.95rem;
@@ -114,75 +273,28 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
-    /* Review Mode */
     .scenario-btn {
       background: var(--bg-muted);
       border: 1px solid var(--bg-muted);
       color: var(--text-muted);
     }
     .scenario-btn:hover {
-      background: #ccd6cf;
+      background: var(--action-fold);
     }
-    .scenario-btn.scenario-missed {
-      background: #f0d8a8;
-      border-color: #e0c890;
-      color: #705818;
-    }
-    .scenario-btn.scenario-missed:hover {
-      background: #e8d098;
+    .scenario-btn.has-data {
+      background: var(--bg-card);
+      border-color: var(--bg-muted);
+      color: var(--text-primary);
     }
     .scenario-btn.active {
-      background: var(--accent-blue);
-      border-color: var(--accent-blue);
+      background: var(--accent-primary);
+      border-color: var(--accent-primary);
       color: white;
     }
     .scenario-btn.active:hover {
-      background: #3d6db3;
+      background: var(--accent-primary-hover);
     }
     
-    .mistakes-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
-    }
-    @media (min-width: 768px) {
-      .mistakes-grid { grid-template-columns: 1fr 1fr; }
-    }
-    @media (min-width: 992px) {
-      .mistakes-grid { grid-template-columns: 1fr 1fr 1fr; }
-    }
-    @media (min-width: 1400px) {
-      .mistakes-grid { grid-template-columns: 1fr 1fr 1fr 1fr; }
-    }
-    .mistake-row {
-      background: var(--bg-card);
-      border-radius: 0.5rem;
-      padding: 0.6rem 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .mistake-row.highlighted {
-      outline: 2px solid var(--accent-blue);
-    }
-    .mistake-hand {
-      font-weight: bold;
-      font-family: monospace;
-      font-size: 1rem;
-    }
-    .mistake-scenario {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-    .mistake-answer {
-      color: var(--accent-red);
-    }
-    .mistake-correct {
-      color: var(--accent-green);
-    }
-    
-    /* Grid */
     .grid-cell {
       font-size: 0.65rem;
       padding: 3px 1px;
@@ -191,44 +303,302 @@
       font-family: monospace;
     }
     .grid-cell.action-r, .grid-cell.action-3 { 
-      background: var(--accent-purple); 
+      background: var(--action-raise); 
       color: white; 
     }
     .grid-cell.action-c { 
-      background: var(--accent-green); 
+      background: var(--action-call); 
       color: white; 
     }
     .grid-cell.action-f { 
-      background: var(--bg-muted); 
+      background: var(--action-fold); 
       color: var(--text-muted); 
+    }
+    .grid-cell.action-none {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px dashed var(--border-light);
+    }
+    .grid-cell.ambiguous {
+      background: repeating-linear-gradient(
+        45deg,
+        var(--accent-warning),
+        var(--accent-warning) 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      color: white;
+    }
+    
+    .coverage-bar {
+      height: 4px;
+      background: var(--bg-muted);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+    .coverage-fill {
+      height: 100%;
+      background: var(--action-call);
+    }
+    
+    .scenario-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .scenario-group {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: var(--bg-card);
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+    }
+    .scenario-group-label {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--text-muted);
+      min-width: 2rem;
+    }
+    .scenario-pill {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 1rem;
+      border: 1px solid var(--bg-muted);
+      background: var(--bg-main);
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .scenario-pill:hover {
+      border-color: var(--accent-selection);
+    }
+    .scenario-pill.active {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: white;
+    }
+    
+    /* Grid Editor Styles */
+    .edit-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 3px;
+      max-width: 500px;
+    }
+    .edit-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-family: monospace;
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--bg-card);
+      border: 1px solid var(--bg-muted);
+      transition: all 0.1s;
+    }
+    .edit-cell:hover {
+      border-color: var(--accent-selection);
+    }
+    .edit-cell.selected {
+      border-color: var(--accent-selection);
+      box-shadow: inset 0 0 0 2px var(--accent-selection);
+    }
+    .edit-cell.action-f {
+      background: var(--action-fold);
+      color: var(--text-muted);
+    }
+    .edit-cell.action-c {
+      background: var(--action-call);
+      color: white;
+    }
+    .edit-cell.action-r {
+      background: var(--action-raise);
+      color: white;
+    }
+    .edit-cell.action-mixed {
+      color: var(--text-primary);
+    }
+    .edit-cell.action-none {
+      background: var(--bg-card);
+      border: 1px dashed var(--border-light);
+    }
+    
+    .hand-editor {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      max-width: 400px;
+    }
+    .scenario-row {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--bg-muted);
+    }
+    .scenario-row:last-child {
+      border-bottom: none;
+    }
+    .scenario-row-active {
+      background: var(--row-highlight);
+    }
+    .scenario-label {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--accent-primary);
+      text-decoration: none;
+    }
+    .scenario-label:hover {
+      text-decoration: underline;
+    }
+    .action-radios {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .action-radio {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      border: 2px solid var(--bg-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .action-radio:hover {
+      border-color: var(--text-muted);
+    }
+    .action-radio.active-f {
+      background: var(--action-fold);
+      border-color: var(--action-fold-hover);
+      color: var(--text-primary);
+    }
+    .action-radio.active-c {
+      background: var(--action-call);
+      border-color: var(--action-call);
+      color: white;
+    }
+    .action-radio.active-r, .action-radio.active-3 {
+      background: var(--action-raise);
+      border-color: var(--action-raise);
+      color: white;
+    }
+    
+    .preview-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .preview-content {
+      background: var(--bg-main);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      max-width: 600px;
+      width: 90%;
     }
     
     @media (max-width: 576px) {
       .position-seat { min-width: 42px; font-size: 0.7rem; padding: 0.3rem; }
-      .card-display { font-size: 1.25rem; padding: 0.4rem 0.6rem; }
       .action-btn { padding: 0.6rem 1rem; font-size: 1rem; min-width: 80px; }
       .grid-cell { font-size: 0.55rem; padding: 2px 0; }
     }
   </style>
 </head>
 <body>
-  <div x-data="preflopTrainer()" class="container py-4">
+  <div x-data="rangeBuilder()" class="container py-4">
     
-    <!-- Header / Stats -->
-    <template x-if="mode === 'quiz'">
+    <!-- Menu Mode -->
+    <template x-if="mode === 'menu'">
+      <div class="text-center py-5">
+        <h3 class="mb-4">Preflop Range Builder</h3>
+        <p class="text-muted mb-4">Build your preflop ranges by responding to scenarios.</p>
+        <div class="d-flex flex-column gap-3 align-items-center">
+          <button class="btn btn-primary-action btn-lg" @click="startBuilding()">
+            Build Ranges
+          </button>
+          <button class="btn btn-call btn-lg" @click="mode = 'edit'">
+            My Ranges
+          </button>
+        </div>
+        <div class="mt-4">
+          <small class="text-muted" x-text="`${totalRecorded} responses recorded`"></small>
+        </div>
+        <div class="mt-4 d-flex justify-content-center gap-2">
+          <button class="btn btn-sm btn-outline-secondary" @click="exportData()">Export</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="showImport = true">Import</button>
+        </div>
+        
+        <div class="mt-4">
+          <label class="small text-muted me-2">Color scheme:</label>
+          <select class="form-select form-select-sm d-inline-block" style="width: auto;" @change="setScheme($event.target.value)" :value="colorScheme">
+            <option value="sage">Sage</option>
+            <option value="ocean">Ocean</option>
+            <option value="sunset">Sunset</option>
+            <option value="lavender">Lavender</option>
+            <option value="mint">Mint</option>
+            <option value="coral">Coral</option>
+            <option value="forest">Forest</option>
+            <option value="sand">Sand</option>
+            <option value="slate">Slate</option>
+            <option value="rose">Rose</option>
+          </select>
+        </div>
+        
+        <!-- Import Modal -->
+        <div x-show="showImport" class="mt-4">
+          <div class="card mx-auto" style="max-width: 400px;">
+            <div class="card-body">
+              <h6 class="card-title">Import Data</h6>
+              <textarea class="form-control mb-2" rows="4" placeholder="Paste exported JSON here..." x-model="importText"></textarea>
+              <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-sm btn-secondary" @click="showImport = false; importText = ''">Cancel</button>
+                <button class="btn btn-sm btn-primary-action" @click="importData()">Import</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- Build Mode Header -->
+    <template x-if="mode === 'build'">
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0">Preflop Trainer</h5>
+        <h5 class="mb-0">Build Ranges</h5>
         <div class="stats-bar d-flex align-items-center gap-3">
-          <span style="color: var(--text-muted)" x-text="`Hand ${total + 1}`"></span>
-          <button class="btn btn-sm scenario-btn" @click="endSession()" title="End session (Q)">
-            End
+          <select class="form-select form-select-sm" style="width: auto;" @change="setScheme($event.target.value)" :value="colorScheme">
+            <option value="sage">Sage</option>
+            <option value="ocean">Ocean</option>
+            <option value="sunset">Sunset</option>
+            <option value="lavender">Lavender</option>
+            <option value="mint">Mint</option>
+            <option value="coral">Coral</option>
+            <option value="forest">Forest</option>
+            <option value="sand">Sand</option>
+            <option value="slate">Slate</option>
+            <option value="rose">Rose</option>
+          </select>
+          <span style="color: var(--text-muted)" x-text="`${sessionCount} this session`"></span>
+          <button class="btn btn-sm scenario-btn" @click="mode = 'menu'" title="Done (Q)">
+            Done
           </button>
         </div>
       </div>
     </template>
 
-    <!-- Quiz Mode -->
-    <template x-if="mode === 'quiz'">
+    <!-- Build Mode -->
+    <template x-if="mode === 'build'">
       <div>
         <!-- Table Display -->
         <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
@@ -247,7 +617,9 @@
                 <span x-show="i === raiserPosition">raise</span>
                 <span x-show="callerPositions.includes(i)">call</span>
                 <span x-show="i < yourPosition && i !== raiserPosition && !callerPositions.includes(i)">fold</span>
-                <span x-show="i > yourPosition">-</span>
+                <span x-show="i > yourPosition && i === 7">½ BB</span>
+                <span x-show="i > yourPosition && i === 8">1 BB</span>
+                <span x-show="i > yourPosition && i < 7">-</span>
               </div>
             </div>
           </template>
@@ -259,103 +631,209 @@
         </div>
 
         <!-- Your Hand -->
-        <div class="text-center mb-4">
-          <span class="card-display" :class="card1Color" x-text="card1"></span>
-          <span class="card-display" :class="card2Color" x-text="card2"></span>
+        <div class="d-flex justify-content-center gap-2 mb-4">
+          <div class="card-display" :class="card1Color">
+            <div class="card-rank" x-text="card1Rank"></div>
+            <div class="card-suit" x-html="suitSvg(card1Suit)"></div>
+          </div>
+          <div class="card-display" :class="card2Color">
+            <div class="card-rank" x-text="card2Rank"></div>
+            <div class="card-suit" x-html="suitSvg(card2Suit)"></div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
           <button class="btn btn-fold action-btn" 
                   x-show="availableActions.includes('f')"
-                  @click="submitAnswer('f')"><u>F</u>old</button>
+                  @click="recordResponse('f')"><u>F</u>old</button>
           <button class="btn btn-call action-btn" 
                   x-show="availableActions.includes('c')"
-                  @click="submitAnswer('c')" 
+                  @click="recordResponse('c')" 
                   x-html="scenarioKey === 'BB:LP' ? '<u>C</u>heck' : '<u>C</u>all'"></button>
           <button class="btn btn-raise action-btn" 
                   x-show="availableActions.includes('r')"
-                  @click="submitAnswer('r')"><u>R</u>aise</button>
+                  @click="recordResponse('r')"><u>R</u>aise</button>
           <button class="btn btn-raise action-btn" 
                   x-show="availableActions.includes('3')"
-                  @click="submitAnswer('3')"><u>R</u>e-raise</button>
+                  @click="recordResponse('3')"><u>R</u>e-raise</button>
         </div>
       </div>
     </template>
 
-    <!-- Review Mode -->
-    <template x-if="mode === 'review'">
+    <!-- My Ranges Mode -->
+    <template x-if="mode === 'edit'">
       <div>
-        <h4 class="text-center mb-4">
-          Session Complete: <span x-text="`${correct}/${total} (${Math.round(correct/total*100)}%)`"></span>
-        </h4>
-
-        <!-- Mistakes -->
-        <div x-show="mistakes.length > 0" class="mb-4">
-          <h5 class="mb-3">Mistakes</h5>
-          <div class="mistakes-grid">
-            <template x-for="(m, i) in mistakes" :key="i">
-              <div class="mistake-row" 
-                   :class="{'highlighted': selectedScenario === m.scenarioKey}"
-                   @click="selectedScenario = m.scenarioKey"
-                   style="cursor: pointer;">
-                <div>
-                  <span class="mistake-hand" x-text="m.hand"></span>
-                  <span class="mistake-scenario ms-2" x-text="SCENARIO_LABELS[m.scenarioKey]"></span>
-                </div>
-                <div>
-                  <span class="mistake-answer" x-text="actionLabel(m.answered, m.scenarioKey)"></span>
-                  <span class="mx-1" style="color: var(--text-muted)">→</span>
-                  <span class="mistake-correct" x-text="actionLabel(m.expected, m.scenarioKey)"></span>
-                </div>
-              </div>
-            </template>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">My Ranges</h5>
+          <div class="d-flex align-items-center gap-2">
+            <select class="form-select form-select-sm" style="width: auto;" @change="setScheme($event.target.value)" :value="colorScheme">
+              <option value="sage">Sage</option>
+              <option value="ocean">Ocean</option>
+              <option value="sunset">Sunset</option>
+              <option value="lavender">Lavender</option>
+              <option value="mint">Mint</option>
+              <option value="coral">Coral</option>
+              <option value="forest">Forest</option>
+              <option value="sand">Sand</option>
+              <option value="slate">Slate</option>
+              <option value="rose">Rose</option>
+            </select>
+            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'; selectedHands = []; editScenario = null">Back</button>
           </div>
         </div>
 
-        <div x-show="mistakes.length === 0" class="text-center mb-4" style="color: var(--accent-green)">
-          <h5>Perfect session! No mistakes.</h5>
+        <!-- Scenario Filter -->
+        <div class="scenario-grid mb-3">
+          <div class="scenario-group">
+            <div class="scenario-group-label">EP</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'EP:O' }" @click="editScenario = 'EP:O'">open</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'EP:vW' }" @click="editScenario = 'EP:vW'">vs weak</button>
+          </div>
+          <div class="scenario-group">
+            <div class="scenario-group-label">CO</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'CO:O' }" @click="editScenario = 'CO:O'">open</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'CO:vW' }" @click="editScenario = 'CO:vW'">vs weak</button>
+          </div>
+          <div class="scenario-group">
+            <div class="scenario-group-label">BTN</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'BTN:O' }" @click="editScenario = 'BTN:O'">open</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'BTN:vW' }" @click="editScenario = 'BTN:vW'">vs weak</button>
+          </div>
+          <div class="scenario-group">
+            <div class="scenario-group-label">SB</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'SB:O' }" @click="editScenario = 'SB:O'">open</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'SB:LP' }" @click="editScenario = 'SB:LP'">limpers</button>
+          </div>
+          <div class="scenario-group">
+            <div class="scenario-group-label">Blinds</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'BB:LP' }" @click="editScenario = 'BB:LP'">BB limped</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'B:vW' }" @click="editScenario = 'B:vW'">vs weak</button>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'B:vS' }" @click="editScenario = 'B:vS'">vs steal</button>
+          </div>
+          <div class="scenario-group">
+            <div class="scenario-group-label">Any</div>
+            <button class="scenario-pill" :class="{ 'active': editScenario === 'ALL:vStr' }" @click="editScenario = 'ALL:vStr'">vs strong</button>
+            <button class="scenario-pill" :class="{ 'active': !editScenario }" @click="editScenario = null">all</button>
+          </div>
+        </div>
+        
+        <!-- Stats for selected scenario -->
+        <div x-show="editScenario && getScenarioStats(editScenario)" class="mb-3 small text-muted">
+          <span x-text="SCENARIO_LABELS[editScenario]"></span>:
+          <span x-text="getCoverage(editScenario)"></span>/169,
+          VPIP <span x-text="getScenarioStats(editScenario)?.vpip + '%'"></span>,
+          PFR <span x-text="getScenarioStats(editScenario)?.pfr + '%'"></span>
+          <template x-if="SCENARIOS[editScenario]?.actions.includes('3')">
+            <span>, 3bet <span x-text="getScenarioStats(editScenario)?.threeBet + '%'"></span></span>
+          </template>
         </div>
 
-        <!-- Scenario Grid Selector -->
-        <h5 class="mb-3">View Range Grid</h5>
-        <div class="row g-2 mb-4">
-          <template x-for="key in SCENARIO_KEYS" :key="key">
-            <div class="col-6 col-md-4 col-lg-3">
-              <button class="btn scenario-btn w-100 btn-sm"
-                      :class="{
-                        'active': selectedScenario === key,
-                        'scenario-missed': stats[key]?.total > 0 && stats[key].correct !== stats[key].total
-                      }"
-                      @click="selectedScenario = selectedScenario === key ? null : key"
-                      x-text="SCENARIO_LABELS[key]">
-              </button>
+        <!-- Instructions -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <p class="small text-muted mb-0">
+            Click hands to select, then edit. <kbd>Esc</kbd> to clear.
+          </p>
+          <div class="d-flex gap-2">
+            <button x-show="editScenario" 
+                    class="btn btn-sm scenario-btn" 
+                    @click="selectEmptyHands()"
+                    x-text="`Select empty (${getEmptyCount()})`"></button>
+            <button x-show="editScenario" 
+                    class="btn btn-sm btn-outline-danger" 
+                    @click="clearScenario(editScenario)">Clear scenario</button>
+          </div>
+        </div>
+
+        <!-- Hand Grid -->
+        <div class="edit-grid mb-4">
+          <template x-for="cell in gridCells" :key="cell.idx">
+            <div class="edit-cell"
+                 :class="getEditCellClass(cell.hand)"
+                 :style="getEditCellStyle(cell.hand)"
+                 @click="toggleHandSelection(cell.hand)"
+                 x-text="cell.hand">
             </div>
           </template>
         </div>
 
-        <!-- Range Grid -->
-        <div x-show="selectedScenario" class="mb-4">
-          <h6 x-text="SCENARIO_LABELS[selectedScenario]" class="text-center mb-2"></h6>
-          <div class="d-flex justify-content-center">
-            <div style="display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; max-width: 400px; width: 100%;">
-              <template x-for="cell in gridCells" :key="cell.idx">
-                <div class="grid-cell" 
-                     :class="'action-' + getGridAction(cell.row, cell.col)"
-                     x-text="cell.hand"></div>
-              </template>
-            </div>
+        <!-- Legend -->
+        <div class="mb-4 small" style="color: var(--text-muted)">
+          <span class="badge me-1" style="background: var(--action-raise)">raise</span>
+          <span class="badge me-1" style="background: var(--action-call)">call</span>
+          <span class="badge me-1" style="background: var(--action-fold); color: var(--text-muted)">fold</span>
+          <span class="badge" style="background: var(--bg-card); border: 1px dashed var(--border-light); color: var(--text-muted)">empty</span>
+        </div>
+
+        <!-- Hand Editor Panel -->
+        <div x-show="selectedHands.length > 0" class="hand-editor p-3">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0" x-text="selectedHands.length === 1 ? selectedHands[0] : selectedHands.length + ' hands'"></h6>
+            <button class="btn btn-sm scenario-btn" @click="selectedHands = []">Clear</button>
           </div>
-          <div class="text-center mt-3 small" style="color: var(--text-muted)">
-            <span class="badge me-1" style="background: var(--accent-purple)">raise/3-bet</span>
-            <span class="badge me-1" style="background: var(--accent-green)">call</span>
-            <span class="badge" style="background: var(--bg-muted); color: var(--text-muted)">fold</span>
+          
+          <template x-for="key in SCENARIO_KEYS" :key="key">
+            <div class="scenario-row" :class="{ 'scenario-row-active': editScenario === key }">
+              <a href="#" class="scenario-label" @click.prevent="showPreview(key)" x-text="SCENARIO_LABELS[key]"></a>
+              <span x-show="hasConflict(key)" class="badge me-2" style="background: var(--accent-warning); font-size: 0.65rem;">mixed</span>
+              <div class="action-radios">
+                <div class="action-radio"
+                     x-show="SCENARIOS[key].actions.includes('f')"
+                     :class="{ 'active-f': getSelectedAction(key) === 'f' }"
+                     @click="toggleAction(key, 'f')">F</div>
+                <div class="action-radio"
+                     :class="{ 'active-c': getSelectedAction(key) === 'c' }"
+                     @click="toggleAction(key, 'c')">C</div>
+                <div class="action-radio"
+                     :class="{ 'active-r': getSelectedAction(key) === 'r' || getSelectedAction(key) === '3' }"
+                     @click="toggleAction(key, SCENARIOS[key].actions.includes('3') ? '3' : 'r')">R</div>
+              </div>
+            </div>
+          </template>
+          
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <button class="btn btn-sm btn-fold" @click="setAllScenarios('f')">All Fold</button>
+            <button class="btn btn-sm btn-call" @click="setAllScenarios('c')">All Call</button>
+            <button class="btn btn-sm btn-raise" @click="setAllScenarios('r')">All Raise</button>
+            <button class="btn btn-sm btn-outline-danger ms-auto" @click="clearSelectedHands()">Clear Data</button>
           </div>
         </div>
 
-        <!-- Play Again -->
-        <div class="text-center mt-4">
-          <button class="btn btn-again btn-lg" @click="startNewSession()">Play Again</button>
+        <!-- Scenario Preview Modal -->
+        <div x-show="previewScenario" class="preview-modal" @click.self="previewScenario = null">
+          <div class="preview-content">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0" x-text="SCENARIO_LABELS[previewScenario]"></h6>
+              <button class="btn btn-sm scenario-btn" @click="previewScenario = null">Close</button>
+            </div>
+            
+            <!-- Preview Table Display -->
+            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+              <template x-for="(pos, i) in positions" :key="'preview-' + i">
+                <div class="position-seat"
+                     :class="{
+                       'you': i === previewYourPosition,
+                       'raiser': i === previewRaiserPosition,
+                       'caller': previewCallerPositions.includes(i),
+                       'folded': i < previewYourPosition && i !== previewRaiserPosition && !previewCallerPositions.includes(i),
+                       'waiting': i > previewYourPosition
+                     }">
+                  <div x-text="pos"></div>
+                  <div class="small">
+                    <span x-show="i === previewYourPosition">?</span>
+                    <span x-show="i === previewRaiserPosition">raise</span>
+                    <span x-show="previewCallerPositions.includes(i)">call</span>
+                    <span x-show="i < previewYourPosition && i !== previewRaiserPosition && !previewCallerPositions.includes(i)">fold</span>
+                    <span x-show="i > previewYourPosition && i === 7">½ BB</span>
+                    <span x-show="i > previewYourPosition && i === 8">1 BB</span>
+                    <span x-show="i > previewYourPosition && i < 7">-</span>
+                  </div>
+                </div>
+              </template>
+            </div>
+            
+            <div class="text-center text-muted small" x-text="previewVillainRead || 'Action is on you'"></div>
+          </div>
         </div>
       </div>
     </template>
@@ -365,8 +843,7 @@
   <script src="data.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <script>
-    function preflopTrainer() {
-      // Pre-compute grid cells in correct order (AA top-left, 22 bottom-right)
+    function rangeBuilder() {
       const gridCells = [];
       for (let row = 0; row < 13; row++) {
         for (let col = 0; col < 13; col++) {
@@ -382,73 +859,218 @@
         }
       }
       
+      // Load saved ranges from localStorage
+      // Structure: { scenario: { hand: { action: count, ... }, ... }, ... }
+      let savedRanges = JSON.parse(localStorage.getItem('myRanges') || '{}');
+      
+      // Migrate old format (action string) to new format (count object)
+      for (const scenario in savedRanges) {
+        for (const hand in savedRanges[scenario]) {
+          const val = savedRanges[scenario][hand];
+          if (typeof val === 'string') {
+            savedRanges[scenario][hand] = { [val]: 1 };
+          }
+        }
+      }
+      localStorage.setItem('myRanges', JSON.stringify(savedRanges));
+      
       return {
-        mode: 'quiz',
+        mode: 'menu',
         positions: POSITIONS,
         gridCells,
+        myRanges: savedRanges,
         
-        // Current question state
+        // Build mode state
         scenarioKey: null,
         hand: null,
         yourPosition: 0,
         raiserPosition: -1,
         callerPositions: [],
-        card1: '',
-        card2: '',
+        card1Rank: '',
+        card1Suit: '',
+        card2Rank: '',
+        card2Suit: '',
         card1Color: 'black',
         card2Color: 'black',
         villainRead: '',
         availableActions: [],
-        correctAction: '',
+        sessionCount: 0,
         
-        // Session stats
-        correct: 0,
-        total: 0,
-        mistakes: [],
-        stats: {},
-        selectedScenario: null,
+        // Edit mode state
+        selectedHands: [],
+        editScenario: null,
+        previewScenario: null,
+        previewYourPosition: 0,
+        previewRaiserPosition: -1,
+        previewCallerPositions: [],
+        previewVillainRead: '',
         
-        // Constants
+        // Import/export state
+        showImport: false,
+        importText: '',
+        
+        // Color scheme
+        colorScheme: localStorage.getItem('colorScheme') || 'sage',
+        
+        SCENARIOS,
         SCENARIO_LABELS,
         SCENARIO_KEYS,
         
+        // Propagation chains (tightest to widest)
+        OPEN_CHAIN: ['EP:O', 'CO:O', 'BTN:O'],
+        VS_WEAK_CHAIN: ['EP:vW', 'CO:vW', 'BTN:vW'],
+        
+        // Cross-chain: fold in open → fold in vs_weak
+        OPEN_TO_VS_WEAK: {
+          'EP:O': 'EP:vW',
+          'CO:O': 'CO:vW',
+          'BTN:O': 'BTN:vW'
+        },
+        
+        get totalRecorded() {
+          let count = 0;
+          for (const scenario in this.myRanges) {
+            for (const hand in this.myRanges[scenario]) {
+              count += this.getResponseCount(scenario, hand);
+            }
+          }
+          return count;
+        },
+        
         init() {
-          SCENARIO_KEYS.forEach(k => this.stats[k] = { correct: 0, total: 0 });
-          this.nextQuestion();
+          // Apply saved color scheme
+          document.documentElement.setAttribute('data-scheme', this.colorScheme);
           
           document.addEventListener('keydown', (e) => {
-            if (this.mode !== 'quiz') return;
+            if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
             
             const key = e.key.toLowerCase();
-            if (key === 'f' && this.availableActions.includes('f')) {
-              this.submitAnswer('f');
-            } else if (key === 'c' && this.availableActions.includes('c')) {
-              this.submitAnswer('c');
-            } else if (key === 'r') {
-              if (this.availableActions.includes('r')) this.submitAnswer('r');
-              else if (this.availableActions.includes('3')) this.submitAnswer('3');
-            } else if (key === 'q' || key === 'escape') {
-              this.endSession();
+            
+            // Build mode shortcuts
+            if (this.mode === 'build') {
+              if (key === 'f' && this.availableActions.includes('f')) {
+                this.recordResponse('f');
+              } else if (key === 'c' && this.availableActions.includes('c')) {
+                this.recordResponse('c');
+              } else if (key === 'r') {
+                if (this.availableActions.includes('r')) this.recordResponse('r');
+                else if (this.availableActions.includes('3')) this.recordResponse('3');
+              } else if (key === 'q' || key === 'escape') {
+                this.mode = 'menu';
+              }
+            }
+            
+            // Edit mode shortcuts
+            if (this.mode === 'edit') {
+              if (key === 'escape') {
+                if (this.previewScenario) {
+                  this.previewScenario = null;
+                } else if (this.selectedHands.length > 0) {
+                  this.selectedHands = [];
+                } else if (this.editScenario) {
+                  this.editScenario = null;
+                } else {
+                  this.mode = 'menu';
+                }
+              }
             }
           });
         },
         
-        endSession() {
-          if (this.total === 0) return;
-          this.mode = 'review';
+        setScheme(scheme) {
+          this.colorScheme = scheme;
+          localStorage.setItem('colorScheme', scheme);
+          document.documentElement.setAttribute('data-scheme', scheme);
+        },
+        
+        startBuilding() {
+          this.sessionCount = 0;
+          this.mode = 'build';
+          this.nextQuestion();
         },
         
         pickRandom(arr) {
           return arr[Math.floor(Math.random() * arr.length)];
         },
         
+        getLeastRespondedPair() {
+          // Find showable pairs with minimum response count
+          // Prioritize EP/BTN and non-chain scenarios over CO
+          const { priority1, priority2 } = this.getShowableScenarios();
+          
+          // Check priority1 first (EP, BTN, blinds, non-chain)
+          let minCount = Infinity;
+          let candidates = [];
+          
+          for (const scenario of priority1) {
+            for (const hand of HAND_LIST) {
+              if (!this.shouldShowScenario(scenario, hand)) continue;
+              const count = this.getResponseCount(scenario, hand);
+              if (count < minCount) {
+                minCount = count;
+                candidates = [{ scenario, hand }];
+              } else if (count === minCount) {
+                candidates.push({ scenario, hand });
+              }
+            }
+          }
+          
+          if (candidates.length > 0) {
+            return this.pickRandom(candidates);
+          }
+          
+          // Fall back to priority2 (CO scenarios)
+          for (const scenario of priority2) {
+            for (const hand of HAND_LIST) {
+              if (!this.shouldShowScenario(scenario, hand)) continue;
+              const count = this.getResponseCount(scenario, hand);
+              if (count < minCount) {
+                minCount = count;
+                candidates = [{ scenario, hand }];
+              } else if (count === minCount) {
+                candidates.push({ scenario, hand });
+              }
+            }
+          }
+          
+          return candidates.length > 0 ? this.pickRandom(candidates) : null;
+        },
+        
+        findShowablePair() {
+          // Find any showable pair, with priority ordering
+          const { priority1, priority2 } = this.getShowableScenarios();
+          
+          const candidates1 = [];
+          for (const scenario of priority1) {
+            for (const hand of HAND_LIST) {
+              if (this.shouldShowScenario(scenario, hand)) {
+                candidates1.push({ scenario, hand });
+              }
+            }
+          }
+          if (candidates1.length > 0) return this.pickRandom(candidates1);
+          
+          const candidates2 = [];
+          for (const scenario of priority2) {
+            for (const hand of HAND_LIST) {
+              if (this.shouldShowScenario(scenario, hand)) {
+                candidates2.push({ scenario, hand });
+              }
+            }
+          }
+          if (candidates2.length > 0) return this.pickRandom(candidates2);
+          
+          return null;
+        },
+        
         getPositionIndex(pos, situation) {
           switch(pos) {
-            case 'EP':
+            case 'EP': 
+              // If facing a raise, we need someone before us, so start at UTG+1
               if (situation === 'vs_weak' || situation === 'vs_strong') {
                 return this.pickRandom([1, 2, 3]);
               }
-              return 0;
+              return 0; // open from UTG
             case 'CO': return 5;
             case 'BTN': return 6;
             case 'SB': return 7;
@@ -457,44 +1079,147 @@
           }
         },
         
+        // Check if CO should be auto-filled (EP and BTN match)
+        tryAutoFillCO(hand, chain) {
+          const ep = chain[0];
+          const co = chain[1];
+          const btn = chain[2];
+          
+          const epAction = this.getMyAction(ep, hand);
+          const btnAction = this.getMyAction(btn, hand);
+          const coAction = this.getMyAction(co, hand);
+          
+          // If EP and BTN both covered and match, auto-fill CO
+          if (epAction && btnAction && !coAction && epAction === btnAction) {
+            this.recordForScenario(co, epAction);
+            return true;
+          }
+          return false;
+        },
+        
+        // Should we show this scenario for this hand?
+        shouldShowScenario(scenario, hand) {
+          const chain = this.getChainFor(scenario);
+          if (!chain) return true; // Non-chain scenarios always shown
+          
+          const ep = chain[0];
+          const co = chain[1];
+          const btn = chain[2];
+          
+          if (scenario === ep || scenario === btn) {
+            // Always show EP and BTN if uncovered
+            return !this.getMyAction(scenario, hand);
+          }
+          
+          if (scenario === co) {
+            // Only show CO if EP and BTN are covered AND differ
+            const epAction = this.getMyAction(ep, hand);
+            const btnAction = this.getMyAction(btn, hand);
+            const coAction = this.getMyAction(co, hand);
+            
+            return !coAction && epAction && btnAction && epAction !== btnAction;
+          }
+          
+          return true;
+        },
+        
+        // Get scenarios that should be shown (for selection)
+        getShowableScenarios() {
+          // Prioritize: EP/BTN of chains, blinds/other, then CO when needed
+          const priority1 = []; // EP and BTN scenarios, blinds, non-chain
+          const priority2 = []; // CO scenarios (only when EP ≠ BTN)
+          
+          for (const scenario of SCENARIO_KEYS) {
+            const chain = this.getChainFor(scenario);
+            if (chain && scenario === chain[1]) {
+              // CO scenario - lower priority
+              priority2.push(scenario);
+            } else {
+              priority1.push(scenario);
+            }
+          }
+          
+          return { priority1, priority2 };
+        },
+        
         nextQuestion() {
-          this.hand = this.pickRandom(HAND_LIST);
-          this.scenarioKey = this.pickRandom(SCENARIO_KEYS);
+          // 90% chance to prioritize least-responded hands
+          if (Math.random() < 0.90) {
+            const pick = this.getLeastRespondedPair();
+            if (pick && this.shouldShowScenario(pick.scenario, pick.hand)) {
+              this.scenarioKey = pick.scenario;
+              this.hand = pick.hand;
+            } else {
+              // Find a valid scenario+hand to show
+              const found = this.findShowablePair();
+              if (found) {
+                this.scenarioKey = found.scenario;
+                this.hand = found.hand;
+              } else {
+                this.hand = this.pickRandom(HAND_LIST);
+                this.scenarioKey = this.pickRandom(SCENARIO_KEYS);
+              }
+            }
+          } else {
+            const found = this.findShowablePair();
+            if (found) {
+              this.scenarioKey = found.scenario;
+              this.hand = found.hand;
+            } else {
+              this.hand = this.pickRandom(HAND_LIST);
+              this.scenarioKey = this.pickRandom(SCENARIO_KEYS);
+            }
+          }
           
           const scenario = SCENARIOS[this.scenarioKey];
-          this.correctAction = HANDS[this.hand][this.scenarioKey];
           this.availableActions = scenario.actions.split('');
-          
           this.yourPosition = this.getPositionIndex(scenario.position, scenario.situation);
           
-          // Set up raiser/callers
           this.raiserPosition = -1;
           this.callerPositions = [];
+          this.villainRead = '';
           
-          if (scenario.situation === 'vs_steal') {
+          if (scenario.situation === 'open') {
+            this.villainRead = '';
+          } else if (scenario.situation === 'vs_steal') {
             this.raiserPosition = this.pickRandom([5, 6]);
             this.villainRead = `${POSITIONS[this.raiserPosition]} steal attempt`;
-          } else if (scenario.situation === 'vs_weak' || scenario.situation === 'vs_strong') {
+          } else if (scenario.situation === 'vs_weak') {
             const earlier = [];
             for (let i = 0; i < this.yourPosition; i++) earlier.push(i);
             if (earlier.length === 0) earlier.push(0);
             this.raiserPosition = this.pickRandom(earlier);
-            this.villainRead = scenario.situation === 'vs_weak' 
-              ? `${POSITIONS[this.raiserPosition]} is loose` 
-              : `${POSITIONS[this.raiserPosition]} is tight`;
+            this.villainRead = `${POSITIONS[this.raiserPosition]} is loose`;
+          } else if (scenario.situation === 'vs_strong') {
+            const earlier = [];
+            for (let i = 0; i < this.yourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.raiserPosition = this.pickRandom(earlier);
+            this.villainRead = `${POSITIONS[this.raiserPosition]} is tight`;
           } else if (scenario.situation === 'limped') {
-            this.villainRead = '';
-            for (let i = 0; i < this.yourPosition; i++) {
-              if (Math.random() < 0.5 || this.callerPositions.length === 0) {
+            const maxLimpers = this.yourPosition;
+            for (let i = 0; i < maxLimpers; i++) {
+              if (Math.random() < 0.6 || this.callerPositions.length === 0) {
                 this.callerPositions.push(i);
               }
             }
-            if (this.callerPositions.length === 0 && this.yourPosition > 0) {
-              this.callerPositions.push(this.yourPosition - 1);
+            if (this.callerPositions.length === 0 && maxLimpers > 0) {
+              this.callerPositions.push(maxLimpers - 1);
             }
+            this.villainRead = `${this.callerPositions.length} limper${this.callerPositions.length !== 1 ? 's' : ''}`;
           }
           
           this.formatHand();
+        },
+        
+        suitSvg(suit) {
+          const svgs = {
+            '♠': '<svg viewBox="0 0 60 60" fill="currentColor"><g transform="rotate(225,30,30)"><rect width="30" height="30" x="20" y="20"/><circle cx="20" cy="35" r="15"/><circle cx="35" cy="20" r="15"/></g><path d="M30,30 Q30,50 20,60 H40 Q30,50 30,30"/></svg>',
+            '♥': '<svg viewBox="0 0 600 600" fill="currentColor"><g transform="rotate(45,300,300)"><rect x="150" y="150" height="350" width="350"/><circle cx="150" cy="325" r="175"/><circle cx="325" cy="150" r="175"/></g></svg>',
+            '♦': '<svg viewBox="0 0 60 60" fill="currentColor"><rect x="10" y="10" width="40" height="40" transform="rotate(45,30,30)"/></svg>',
+            '♣': '<svg viewBox="0 0 60 60" fill="currentColor"><circle cx="18" cy="35" r="14"/><circle cx="30" cy="15" r="14"/><circle cx="42" cy="35" r="14"/><path d="M30,30 Q30,50 20,60 H40 Q30,50 30,30"/></svg>'
+          };
+          return svgs[suit] || '';
         },
         
         formatHand() {
@@ -515,63 +1240,481 @@
             s2 = this.pickRandom(suits.filter(s => s !== s1));
           }
           
-          this.card1 = r1 + s1;
-          this.card2 = r2 + s2;
+          this.card1Rank = r1;
+          this.card1Suit = s1;
+          this.card2Rank = r2;
+          this.card2Suit = s2;
           this.card1Color = (s1 === '♥' || s1 === '♦') ? 'red' : 'black';
           this.card2Color = (s2 === '♥' || s2 === '♦') ? 'red' : 'black';
         },
         
-        submitAnswer(action) {
-          const isCorrect = action === this.correctAction;
-          
-          this.stats[this.scenarioKey].total++;
-          if (isCorrect) {
-            this.stats[this.scenarioKey].correct++;
-            this.correct++;
-          } else {
-            this.mistakes.push({
-              hand: this.hand,
-              scenarioKey: this.scenarioKey,
-              answered: action,
-              expected: this.correctAction
-            });
-          }
-          this.total++;
-          
-          if (this.total >= 100) {
-            this.mode = 'review';
-          } else {
-            this.nextQuestion();
-          }
+        getChainFor(scenario) {
+          if (this.OPEN_CHAIN.includes(scenario)) return this.OPEN_CHAIN;
+          if (this.VS_WEAK_CHAIN.includes(scenario)) return this.VS_WEAK_CHAIN;
+          return null;
         },
         
-        actionLabel(action, scenario = null) {
-          const labels = { f: 'Fold', c: 'Call', r: 'Raise', '3': '3-Bet' };
-          const key = scenario || this.scenarioKey;
-          if (key === 'BB:LP' && action === 'c') return 'Check';
-          return labels[action] || action;
+        getScenariosToUpdate(scenario, action) {
+          const chain = this.getChainFor(scenario);
+          if (!chain) return [scenario];
+          
+          const idx = chain.indexOf(scenario);
+          
+          if (action === 'f') {
+            // Fold propagates toward tighter (lower indices)
+            return chain.slice(0, idx + 1);
+          } else if (action === 'r' || action === '3') {
+            // Raise propagates toward wider (higher indices)
+            return chain.slice(idx);
+          }
+          // Call doesn't propagate
+          return [scenario];
         },
         
-        startNewSession() {
-          this.mode = 'quiz';
-          this.correct = 0;
-          this.total = 0;
-          this.mistakes = [];
-          this.selectedScenario = null;
-          SCENARIO_KEYS.forEach(k => this.stats[k] = { correct: 0, total: 0 });
+        recordForScenario(scenario, action) {
+          if (!this.myRanges[scenario]) {
+            this.myRanges[scenario] = {};
+          }
+          if (!this.myRanges[scenario][this.hand]) {
+            this.myRanges[scenario][this.hand] = {};
+          }
+          const counts = this.myRanges[scenario][this.hand];
+          counts[action] = (counts[action] || 0) + 1;
+        },
+        
+        recordResponse(action) {
+          const scenarios = this.getScenariosToUpdate(this.scenarioKey, action);
+          
+          for (const scenario of scenarios) {
+            this.recordForScenario(scenario, action);
+          }
+          this.sessionCount += scenarios.length;
+          
+          // Cross-chain: fold in open → fold in vs_weak, and BTN:O fold → ALL:vStr fold
+          if (action === 'f') {
+            for (const scenario of scenarios) {
+              const vsWeak = this.OPEN_TO_VS_WEAK[scenario];
+              if (vsWeak) {
+                // Also propagate within vs_weak chain
+                const vsWeakScenarios = this.getScenariosToUpdate(vsWeak, 'f');
+                for (const vs of vsWeakScenarios) {
+                  if (!this.getMyAction(vs, this.hand)) {
+                    this.recordForScenario(vs, 'f');
+                    this.sessionCount++;
+                  }
+                }
+              }
+              
+              // BTN:O fold → ALL:vStr fold
+              if (scenario === 'BTN:O' && !this.getMyAction('ALL:vStr', this.hand)) {
+                this.recordForScenario('ALL:vStr', 'f');
+                this.sessionCount++;
+              }
+            }
+          }
+          
+          // Also try to auto-fill CO if EP and BTN now match
+          const chain = this.getChainFor(this.scenarioKey);
+          if (chain && this.tryAutoFillCO(this.hand, chain)) {
+            this.sessionCount++;
+          }
+          
+          // Also try auto-fill CO for vs_weak chain
+          if (action === 'f' && this.OPEN_CHAIN.includes(this.scenarioKey)) {
+            if (this.tryAutoFillCO(this.hand, this.VS_WEAK_CHAIN)) {
+              this.sessionCount++;
+            }
+          }
+          
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
           this.nextQuestion();
         },
         
-        getGridAction(row, col) {
-          let hand;
-          if (row === col) {
-            hand = RANKS[row] + RANKS[col];
-          } else if (row < col) {
-            hand = RANKS[row] + RANKS[col] + 's';
-          } else {
-            hand = RANKS[col] + RANKS[row] + 'o';
+        getMyAction(scenario, hand) {
+          const counts = this.myRanges[scenario]?.[hand];
+          if (!counts) return null;
+          
+          // Return action with highest count
+          let maxAction = null;
+          let maxCount = 0;
+          for (const [action, count] of Object.entries(counts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              maxAction = action;
+            }
           }
-          return HANDS[hand]?.[this.selectedScenario] || 'f';
+          return maxAction;
+        },
+        
+        isAmbiguous(scenario, hand) {
+          const counts = this.myRanges[scenario]?.[hand];
+          if (!counts) return false;
+          
+          const actions = Object.keys(counts);
+          return actions.length > 1;
+        },
+        
+        getResponseCount(scenario, hand) {
+          const counts = this.myRanges[scenario]?.[hand];
+          if (!counts) return 0;
+          return Object.values(counts).reduce((a, b) => a + b, 0);
+        },
+        
+        getCoverage(scenario) {
+          const hands = this.myRanges[scenario] || {};
+          return Object.keys(hands).length;
+        },
+        
+        getAmbiguousCount(scenario) {
+          const hands = this.myRanges[scenario] || {};
+          let count = 0;
+          for (const hand of Object.keys(hands)) {
+            if (this.isAmbiguous(scenario, hand)) count++;
+          }
+          return count;
+        },
+        
+        getComboCount(hand) {
+          if (hand.length === 2) return 6; // pair
+          if (hand.endsWith('s')) return 4; // suited
+          return 12; // offsuit
+        },
+        
+        getScenarioStats(scenario) {
+          let vpipCombos = 0;
+          let pfrCombos = 0;
+          let threeBetCombos = 0;
+          let coveredCombos = 0;
+          
+          for (const hand of HAND_LIST) {
+            const action = this.getMyAction(scenario, hand);
+            if (!action) continue;
+            
+            const combos = this.getComboCount(hand);
+            coveredCombos += combos;
+            
+            if (action === 'c' || action === 'r' || action === '3') {
+              vpipCombos += combos;
+            }
+            if (action === 'r' || action === '3') {
+              pfrCombos += combos;
+            }
+            if (action === '3') {
+              threeBetCombos += combos;
+            }
+          }
+          
+          if (coveredCombos === 0) return null;
+          
+          return {
+            vpip: Math.round(vpipCombos / coveredCombos * 100),
+            pfr: Math.round(pfrCombos / coveredCombos * 100),
+            threeBet: Math.round(threeBetCombos / coveredCombos * 100),
+            coveredCombos
+          };
+        },
+        
+        clearScenario(scenario) {
+          if (confirm(`Clear all recorded responses for "${SCENARIO_LABELS[scenario]}"?`)) {
+            delete this.myRanges[scenario];
+            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+          }
+        },
+        
+        clearHand(scenario, hand) {
+          if (!this.myRanges[scenario]?.[hand]) return;
+          delete this.myRanges[scenario][hand];
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        },
+        
+        exportData() {
+          const json = JSON.stringify(this.myRanges);
+          // Try to copy to clipboard, fall back to download
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(json).then(() => {
+              alert('Data copied to clipboard!');
+            }).catch(() => {
+              this.downloadJson(json);
+            });
+          } else {
+            this.downloadJson(json);
+          }
+        },
+        
+        downloadJson(json) {
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'preflop-ranges.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        
+        importData() {
+          try {
+            const data = JSON.parse(this.importText);
+            // Merge with existing data
+            for (const scenario in data) {
+              if (!this.myRanges[scenario]) {
+                this.myRanges[scenario] = {};
+              }
+              for (const hand in data[scenario]) {
+                this.myRanges[scenario][hand] = data[scenario][hand];
+              }
+            }
+            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+            this.showImport = false;
+            this.importText = '';
+            alert('Data imported successfully!');
+          } catch (e) {
+            alert('Invalid JSON. Please check the data and try again.');
+          }
+        },
+        
+        // Edit mode methods
+        toggleHandSelection(hand) {
+          const idx = this.selectedHands.indexOf(hand);
+          if (idx === -1) {
+            this.selectedHands.push(hand);
+          } else {
+            this.selectedHands.splice(idx, 1);
+          }
+        },
+        
+        getEmptyCount() {
+          if (!this.editScenario) return 0;
+          let count = 0;
+          for (const hand of HAND_LIST) {
+            if (!this.getMyAction(this.editScenario, hand)) count++;
+          }
+          return count;
+        },
+        
+        selectEmptyHands() {
+          if (!this.editScenario) return;
+          this.selectedHands = HAND_LIST.filter(hand => !this.getMyAction(this.editScenario, hand));
+        },
+        
+        getSelectedAction(scenario) {
+          if (this.selectedHands.length === 0) return null;
+          const first = this.getMyAction(scenario, this.selectedHands[0]);
+          for (const hand of this.selectedHands) {
+            if (this.getMyAction(scenario, hand) !== first) return null;
+          }
+          return first;
+        },
+        
+        hasConflict(scenario) {
+          if (this.selectedHands.length <= 1) return false;
+          const actions = new Set();
+          for (const hand of this.selectedHands) {
+            const action = this.getMyAction(scenario, hand);
+            if (action) actions.add(action === '3' ? 'r' : action);
+          }
+          return actions.size > 1;
+        },
+        
+        setSelectedAction(scenario, action) {
+          if (!this.myRanges[scenario]) {
+            this.myRanges[scenario] = {};
+          }
+          for (const hand of this.selectedHands) {
+            this.myRanges[scenario][hand] = { [action]: 1 };
+          }
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        },
+        
+        toggleAction(scenario, action) {
+          const currentAction = this.getSelectedAction(scenario);
+          const normalizedCurrent = currentAction === '3' ? 'r' : currentAction;
+          const normalizedNew = action === '3' ? 'r' : action;
+          
+          if (normalizedCurrent === normalizedNew) {
+            // Clear the action for all selected hands
+            for (const hand of this.selectedHands) {
+              if (this.myRanges[scenario]?.[hand]) {
+                delete this.myRanges[scenario][hand];
+              }
+            }
+            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+          } else {
+            this.setSelectedAction(scenario, action);
+          }
+        },
+        
+        setAllScenarios(action) {
+          for (const scenario of SCENARIO_KEYS) {
+            const validActions = SCENARIOS[scenario].actions;
+            if (!validActions.includes(action)) continue;
+            
+            if (!this.myRanges[scenario]) {
+              this.myRanges[scenario] = {};
+            }
+            const finalAction = action === 'r' && validActions.includes('3') ? '3' : action;
+            for (const hand of this.selectedHands) {
+              this.myRanges[scenario][hand] = { [finalAction]: 1 };
+            }
+          }
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        },
+        
+        clearSelectedHands() {
+          const label = this.selectedHands.length === 1 ? this.selectedHands[0] : `${this.selectedHands.length} hands`;
+          if (!confirm(`Clear all data for ${label}?`)) return;
+          for (const hand of this.selectedHands) {
+            for (const scenario of SCENARIO_KEYS) {
+              if (this.myRanges[scenario]?.[hand]) {
+                delete this.myRanges[scenario][hand];
+              }
+            }
+          }
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        },
+        
+        getHandActions(hand) {
+          // Get all actions for a hand, ignoring BB:LP check if everything else is fold
+          const actions = new Set();
+          let bbLpAction = null;
+          
+          for (const scenario of SCENARIO_KEYS) {
+            const action = this.getMyAction(scenario, hand);
+            if (!action) continue;
+            
+            const normalized = action === '3' ? 'r' : action;
+            
+            if (scenario === 'BB:LP') {
+              bbLpAction = normalized;
+            } else {
+              actions.add(normalized);
+            }
+          }
+          
+          // Include BB:LP action unless it's 'c' and everything else is fold
+          if (bbLpAction) {
+            const isAllFoldOtherwise = actions.size === 0 || (actions.size === 1 && actions.has('f'));
+            if (!(bbLpAction === 'c' && isAllFoldOtherwise)) {
+              actions.add(bbLpAction);
+            }
+          }
+          
+          return actions;
+        },
+        
+        getEditCellClass(hand) {
+          const classes = [];
+          if (this.selectedHands.includes(hand)) classes.push('selected');
+          
+          if (this.editScenario) {
+            const action = this.getMyAction(this.editScenario, hand);
+            if (action === 'f') classes.push('action-f');
+            else if (action === 'c') classes.push('action-c');
+            else if (action === 'r' || action === '3') classes.push('action-r');
+            else classes.push('action-none');
+          } else {
+            const actions = this.getHandActions(hand);
+            if (actions.size === 0) classes.push('action-none');
+            else if (actions.size === 1) {
+              const action = [...actions][0];
+              if (action === 'f') classes.push('action-f');
+              else if (action === 'c') classes.push('action-c');
+              else if (action === 'r') classes.push('action-r');
+            } else {
+              classes.push('action-mixed');
+            }
+          }
+          
+          return classes.join(' ');
+        },
+        
+        getEditCellStyle(hand) {
+          if (this.editScenario) return '';
+          
+          const actions = this.getHandActions(hand);
+          
+          // Coverage opacity
+          let filledCount = 0;
+          for (const scenario of SCENARIO_KEYS) {
+            if (this.getMyAction(scenario, hand)) filledCount++;
+          }
+          
+          let style = '';
+          if (filledCount > 0) {
+            const opacity = 0.3 + (filledCount / 12) * 0.7;
+            style = `opacity: ${opacity};`;
+          }
+          
+          // Dynamic gradient for mixed actions
+          if (actions.size > 1) {
+            const colors = [];
+            if (actions.has('r')) colors.push('var(--action-raise)');
+            if (actions.has('c')) colors.push('var(--action-call)');
+            if (actions.has('f')) colors.push('var(--action-fold)');
+            
+            const stops = [];
+            const pct = 100 / colors.length;
+            colors.forEach((color, i) => {
+              stops.push(`${color} ${i * pct}%`);
+              stops.push(`${color} ${(i + 1) * pct}%`);
+            });
+            
+            style += `background: linear-gradient(135deg, ${stops.join(', ')});`;
+          }
+          
+          return style;
+        },
+        
+        getHandSummary(hand) {
+          const actions = this.getHandActions(hand);
+          
+          if (actions.size === 0) return null;
+          if (actions.size > 1) return 'partial';
+          
+          const action = [...actions][0];
+          if (action === 'f') return 'fold';
+          if (action === 'c') return 'call';
+          if (action === 'r') return 'raise';
+          return 'partial';
+        },
+        
+        showPreview(scenarioKey) {
+          this.previewScenario = scenarioKey;
+          const scenario = SCENARIOS[scenarioKey];
+          
+          this.previewYourPosition = this.getPositionIndex(scenario.position, scenario.situation);
+          this.previewRaiserPosition = -1;
+          this.previewCallerPositions = [];
+          this.previewVillainRead = '';
+          
+          if (scenario.situation === 'open') {
+            this.previewVillainRead = '';
+          } else if (scenario.situation === 'vs_steal') {
+            this.previewRaiserPosition = this.pickRandom([5, 6]);
+            this.previewVillainRead = `${POSITIONS[this.previewRaiserPosition]} steal attempt`;
+          } else if (scenario.situation === 'vs_weak') {
+            const earlier = [];
+            for (let i = 0; i < this.previewYourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.previewRaiserPosition = this.pickRandom(earlier);
+            this.previewVillainRead = `${POSITIONS[this.previewRaiserPosition]} is loose`;
+          } else if (scenario.situation === 'vs_strong') {
+            const earlier = [];
+            for (let i = 0; i < this.previewYourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.previewRaiserPosition = this.pickRandom(earlier);
+            this.previewVillainRead = `${POSITIONS[this.previewRaiserPosition]} is tight`;
+          } else if (scenario.situation === 'limped') {
+            const maxLimpers = this.previewYourPosition;
+            for (let i = 0; i < maxLimpers; i++) {
+              if (Math.random() < 0.6 || this.previewCallerPositions.length === 0) {
+                this.previewCallerPositions.push(i);
+              }
+            }
+            if (this.previewCallerPositions.length === 0 && maxLimpers > 0) {
+              this.previewCallerPositions.push(maxLimpers - 1);
+            }
+            this.previewVillainRead = `${this.previewCallerPositions.length} limper${this.previewCallerPositions.length !== 1 ? 's' : ''}`;
+          }
         }
       };
     }
