@@ -514,6 +514,219 @@
       .action-btn { padding: 0.6rem 1rem; font-size: 1rem; min-width: 80px; }
       .grid-cell { font-size: 0.55rem; padding: 2px 0; }
     }
+    
+    /* Trainer Mode Styles */
+    .poker-table {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 1.6;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #1a5f2a 0%, #0d4a1c 100%);
+      border-radius: 50%;
+      border: 12px solid #5c3d2e;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .table-felt {
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+    .table-pot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: rgba(255,255,255,0.9);
+      font-size: 1rem;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .table-pot .pot-label {
+      font-size: 0.7rem;
+      font-weight: normal;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .table-street {
+      position: absolute;
+      top: 35%;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .trainer-seat {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -50%);
+    }
+    .trainer-seat .seat-chip {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    .trainer-seat.acting .seat-chip {
+      box-shadow: 0 0 0 4px rgba(255,255,0,0.8), 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .trainer-seat.folded .seat-chip {
+      opacity: 0.35;
+    }
+    
+    .seat-chips {
+      position: absolute;
+      display: flex;
+      gap: 1px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .seat-chips.visible {
+      opacity: 1;
+    }
+    .chip-stack {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+    .seat-chips .chip {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      margin-top: -9px;
+    }
+    .seat-chips .chip:first-child { margin-top: 0; }
+    .chip-white { background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 50%, #ffffff 100%); border: 1px solid #aaa; }
+    .chip-red { background: linear-gradient(135deg, #e84545 0%, #c62828 50%, #e84545 100%); border: 1px solid #8b1a1a; }
+    .chip-green { background: linear-gradient(135deg, #4caf50 0%, #2e7d32 50%, #4caf50 100%); border: 1px solid #1b5e20; }
+    .chip-black { background: linear-gradient(135deg, #424242 0%, #1a1a1a 50%, #424242 100%); border: 1px solid #000; }
+    
+    /* Position chips based on seat location */
+    .trainer-seat[data-side="top"] .seat-chips { bottom: -20px; left: 50%; transform: translateX(-50%); flex-direction: row; }
+    .trainer-seat[data-side="bottom"] .seat-chips { top: -20px; left: 50%; transform: translateX(-50%); flex-direction: row; }
+    .trainer-seat[data-side="left"] .seat-chips { right: -24px; top: 50%; transform: translateY(-50%); flex-direction: row; }
+    .trainer-seat[data-side="right"] .seat-chips { left: -24px; top: 50%; transform: translateY(-50%); flex-direction: row; }
+    
+    .table-action-text {
+      position: absolute;
+      top: 65%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .table-action-text.visible {
+      opacity: 1;
+    }
+    
+    .center-pot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .center-pot.visible {
+      opacity: 1;
+    }
+    .center-pot .chip-stack {
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+    }
+    .center-pot .chip {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      margin-top: -9px;
+    }
+    .center-pot .chip:first-child { margin-top: 0; }
+    
+    .trainer-question {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    .trainer-question h5 {
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+    }
+    .trainer-input {
+      font-size: 1.5rem;
+      text-align: center;
+      max-width: 200px;
+      margin: 0 auto;
+      border: 2px solid var(--bg-muted);
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+    }
+    .trainer-input:focus {
+      border-color: var(--accent-primary);
+      outline: none;
+    }
+    
+    .trainer-feedback {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-weight: bold;
+    }
+    .trainer-feedback.correct {
+      background: var(--action-call);
+      color: white;
+    }
+    .trainer-feedback.incorrect {
+      background: var(--accent-warning);
+      color: white;
+    }
+    
+    .trainer-stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .trainer-stats .stat-value {
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+    
+    @media (max-width: 576px) {
+      .poker-table { border-width: 8px; }
+      .trainer-seat .seat-chip { width: 40px; height: 40px; font-size: 0.65rem; }
+      .seat-action { font-size: 0.6rem; padding: 1px 6px; }
+    }
   </style>
 </head>
 <body>
@@ -530,6 +743,9 @@
           </button>
           <button class="btn btn-call btn-lg" @click="mode = 'edit'">
             My Ranges
+          </button>
+          <button class="btn btn-raise btn-lg" @click="startTrainer()">
+            Action Trainer
           </button>
         </div>
         <div class="mt-4">
@@ -838,6 +1054,100 @@
       </div>
     </template>
 
+    <!-- Trainer Mode -->
+    <template x-if="mode === 'trainer'">
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Action Trainer</h5>
+          <div class="d-flex align-items-center gap-2">
+            <div class="trainer-stats">
+              <span><span class="stat-value" x-text="trainerCorrect"></span>/<span x-text="trainerTotal"></span></span>
+              <span x-show="trainerTotal > 0" x-text="Math.round(trainerCorrect / trainerTotal * 100) + '%'"></span>
+            </div>
+            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'">Done</button>
+          </div>
+        </div>
+
+        <!-- Poker Table -->
+        <div class="poker-table mb-4">
+          <div class="table-felt"></div>
+          
+          <!-- Street indicator -->
+          <div class="table-street" x-text="trainerStreet"></div>
+          
+          <!-- Center pot chips -->
+          <div class="center-pot" :class="{ 'visible': trainerCenterPotVisible }">
+            <template x-for="stack in trainerCenterPotChips" :key="stack.color">
+              <div class="chip-stack">
+                <template x-for="n in stack.count" :key="n">
+                  <div class="chip" :class="'chip-' + stack.color"></div>
+                </template>
+              </div>
+            </template>
+          </div>
+          
+          <!-- Action text in center -->
+          <div class="table-action-text" 
+               :class="{ 'visible': trainerActionVisible }"
+               x-text="trainerCurrentAction"></div>
+          
+          <!-- Seats positioned around the table -->
+          <template x-for="(seat, i) in trainerSeats" :key="i">
+            <div class="trainer-seat"
+                 :class="{
+                   'acting': seat.isActing,
+                   'folded': seat.hasFolded
+                 }"
+                 :data-side="seat.side"
+                 :style="`top: ${seat.y}%; left: ${seat.x}%`">
+              <div class="seat-chip" x-text="seat.position"></div>
+              <div class="seat-chips" :class="{ 'visible': seat.hasChips }">
+                <template x-for="stack in seat.chipStacks" :key="stack.color">
+                  <div class="chip-stack">
+                    <template x-for="n in stack.count" :key="n">
+                      <div class="chip" :class="'chip-' + stack.color"></div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Quiz Phase -->
+        <div x-show="trainerPhase === 'answer-pot'" class="trainer-question mb-4">
+          <h5 x-text="trainerActionQuestion || 'What\\'s the pot?'"></h5>
+          <input type="text" 
+                 class="form-control trainer-input" 
+                 x-model="trainerAnswer"
+                 @keydown.enter="checkPotAnswer()"
+                 x-ref="potInput"
+                 placeholder="$">
+          <button class="btn btn-primary-action mt-3" @click="checkPotAnswer()">Submit</button>
+        </div>
+
+        <div x-show="trainerPhase === 'answer-action'" class="trainer-question mb-4">
+          <h5 x-text="trainerActionQuestion"></h5>
+          <div class="d-flex justify-content-center gap-2 mt-3">
+            <button class="btn btn-call action-btn" @click="checkActionAnswer('call')">Call</button>
+            <button class="btn btn-raise action-btn" @click="checkActionAnswer('raise')">Raise/Bet</button>
+          </div>
+        </div>
+
+        <!-- Feedback Phase -->
+        <div x-show="trainerPhase === 'feedback'" class="mb-4">
+          <div class="trainer-feedback" :class="trainerLastCorrect ? 'correct' : 'incorrect'">
+            <span x-text="trainerFeedbackText"></span>
+          </div>
+        </div>
+
+        <!-- Watching Phase -->
+        <div x-show="trainerPhase === 'watching'" class="text-center mb-4">
+          <p class="text-muted">Watch the action...</p>
+        </div>
+      </div>
+    </template>
+
   </div>
 
   <script src="data.js"></script>
@@ -908,6 +1218,30 @@
         // Import/export state
         showImport: false,
         importText: '',
+        
+        // Trainer mode state
+        trainerPhase: 'watching',
+        trainerStreet: 'Preflop',
+        trainerPot: 0,
+        trainerDisplayPot: 0,
+        trainerSeats: [],
+        trainerActions: [],
+        trainerAnswer: '',
+        trainerActionQuestion: '',
+        trainerCorrectAnswer: null,
+        trainerLastCorrect: false,
+        trainerFeedbackText: '',
+        trainerCorrect: 0,
+        trainerTotal: 0,
+        trainerBlinds: { sb: 1, bb: 2 },
+        trainerQuestionType: 'pot',
+        trainerActionVisible: false,
+        trainerCurrentAction: '',
+        trainerCenterPotVisible: false,
+        trainerCenterPotChips: [],
+        trainerStreetPots: {},
+        trainerActionIndex: 0,
+        trainerCurrentStreet: 'Preflop',
         
         // Color scheme
         colorScheme: localStorage.getItem('colorScheme') || 'sage',
@@ -1715,6 +2049,547 @@
             }
             this.previewVillainRead = `${this.previewCallerPositions.length} limper${this.previewCallerPositions.length !== 1 ? 's' : ''}`;
           }
+        },
+        
+        // Trainer mode methods
+        startTrainer() {
+          this.trainerCorrect = 0;
+          this.trainerTotal = 0;
+          this.mode = 'trainer';
+          this.nextTrainerRound();
+        },
+        
+        initTrainerSeats() {
+          const seatData = [
+            { x: 50, y: 95, side: 'bottom' },   // BTN (bottom center)
+            { x: 85, y: 75, side: 'right' },    // CO (bottom right)
+            { x: 95, y: 45, side: 'right' },    // HJ (right)
+            { x: 85, y: 20, side: 'right' },    // LJ (top right)
+            { x: 60, y: 8, side: 'top' },       // MP (top)
+            { x: 40, y: 8, side: 'top' },       // UTG+1 (top)
+            { x: 15, y: 20, side: 'left' },     // UTG (top left)
+            { x: 5, y: 45, side: 'left' },      // BB (left)
+            { x: 15, y: 75, side: 'left' },     // SB (bottom left)
+          ];
+          
+          const positionOrder = ['BTN', 'CO', 'HJ', 'LJ', 'MP', 'UTG+1', 'UTG', 'BB', 'SB'];
+          
+          this.trainerSeats = positionOrder.map((pos, i) => ({
+            position: pos,
+            x: seatData[i].x,
+            y: seatData[i].y,
+            side: seatData[i].side,
+            isActing: false,
+            hasFolded: false,
+            hasChips: false,
+            chipStacks: []
+          }));
+        },
+        
+        generateTrainerHand() {
+          this.initTrainerSeats();
+          
+          const bb = this.trainerBlinds.bb;
+          const sb = this.trainerBlinds.sb;
+          
+          this.trainerPot = sb + bb;
+          this.trainerDisplayPot = '???';
+          this.trainerActions = [];
+          this.trainerStreet = 'Preflop';
+          this.trainerActionVisible = false;
+          this.trainerCurrentAction = '';
+          this.trainerCenterPotVisible = false;
+          this.trainerCenterPotChips = [];
+          this.trainerStreetPots = {};
+          
+          // SB and BB have posted blinds
+          const sbSeat = this.trainerSeats.find(s => s.position === 'SB');
+          const bbSeat = this.trainerSeats.find(s => s.position === 'BB');
+          sbSeat.hasChips = true;
+          sbSeat.chipStacks = this.amountToChips(sb);
+          bbSeat.hasChips = true;
+          bbSeat.chipStacks = this.amountToChips(bb);
+          
+          // Track state for each player
+          const playerState = {};
+          for (let i = 0; i < 9; i++) {
+            const pos = this.trainerSeats[i].position;
+            playerState[i] = {
+              folded: false,
+              currentBet: pos === 'SB' ? sb : (pos === 'BB' ? bb : 0),
+              hasActed: false
+            };
+          }
+          
+          const actionOrder = this.getActionOrder('preflop');
+          let currentBet = bb;
+          let lastRaiserIdx = 7; // BB initially
+          let raises = 0;
+          
+          // Keep going until everyone has acted and matched the bet (or folded)
+          let actionComplete = false;
+          let startIdx = 0; // Start with UTG
+          
+          while (!actionComplete) {
+            actionComplete = true;
+            
+            for (let i = 0; i < actionOrder.length; i++) {
+              const idx = actionOrder[(startIdx + i) % actionOrder.length];
+              const state = playerState[idx];
+              const seat = this.trainerSeats[idx];
+              
+              // Skip folded players
+              if (state.folded) continue;
+              
+              // Check if this player needs to act
+              const needsToAct = !state.hasActed || state.currentBet < currentBet;
+              if (!needsToAct) continue;
+              
+              // Don't let the last raiser re-raise themselves
+              if (state.currentBet === currentBet && state.hasActed) continue;
+              
+              const isBB = seat.position === 'BB';
+              const rand = Math.random();
+              let action, amount = 0, totalBet = 0;
+              
+              const toCall = currentBet - state.currentBet;
+              
+              if (toCall === 0 && isBB && !state.hasActed) {
+                // BB option
+                if (rand < 0.5) {
+                  action = 'check';
+                  totalBet = currentBet;
+                } else if (raises < 2) {
+                  action = 'raise';
+                  totalBet = Math.round(currentBet * 3);
+                  amount = totalBet - state.currentBet;
+                  currentBet = totalBet;
+                  lastRaiserIdx = idx;
+                  raises++;
+                  actionComplete = false;
+                } else {
+                  action = 'check';
+                  totalBet = currentBet;
+                }
+              } else if (toCall > 0) {
+                // Facing a bet - players with money already in are more likely to call
+                const alreadyInvested = state.currentBet > 0;
+                const foldThreshold = alreadyInvested ? 0.25 : 0.55;
+                
+                if (rand < foldThreshold) {
+                  action = 'fold';
+                } else if (rand < 0.9 || raises >= 2) {
+                  action = 'call';
+                  amount = toCall;
+                  totalBet = currentBet;
+                  this.trainerPot += amount;
+                } else {
+                  action = 'raise';
+                  totalBet = Math.round(currentBet * (2.5 + Math.random()));
+                  amount = totalBet - state.currentBet;
+                  currentBet = totalBet;
+                  lastRaiserIdx = idx;
+                  raises++;
+                  this.trainerPot += amount;
+                  actionComplete = false;
+                }
+              } else {
+                // First to act, no bet yet (shouldn't happen preflop but handle it)
+                if (rand < 0.6) {
+                  action = 'fold';
+                } else if (rand < 0.8) {
+                  action = 'call';
+                  amount = currentBet;
+                  totalBet = currentBet;
+                  this.trainerPot += amount;
+                } else if (raises < 2) {
+                  action = 'raise';
+                  totalBet = Math.round(currentBet * 3);
+                  amount = totalBet;
+                  currentBet = totalBet;
+                  lastRaiserIdx = idx;
+                  raises++;
+                  this.trainerPot += amount;
+                  actionComplete = false;
+                } else {
+                  action = 'call';
+                  amount = currentBet;
+                  totalBet = currentBet;
+                  this.trainerPot += amount;
+                }
+              }
+              
+              state.hasActed = true;
+              if (action === 'fold') {
+                state.folded = true;
+              } else {
+                state.currentBet = totalBet;
+              }
+              
+              this.trainerActions.push({
+                idx,
+                position: seat.position,
+                action,
+                amount,
+                totalBet
+              });
+              
+              // Check if only one player remains
+              const activePlayers = Object.values(playerState).filter(p => !p.folded).length;
+              if (activePlayers <= 1) {
+                return; // Hand is over
+              }
+            }
+            
+            startIdx = 0; // Reset for next orbit if needed
+          }
+          
+          const activePlayers = Object.values(playerState).filter(p => !p.folded).length;
+          this.trainerStreetPots['Preflop'] = this.trainerPot;
+          
+          const foldedIdxs = new Set(
+            Object.entries(playerState).filter(([idx, p]) => p.folded).map(([idx]) => parseInt(idx))
+          );
+          
+          if (activePlayers >= 2) {
+            this.addPostflopAction(activePlayers, foldedIdxs);
+          }
+        },
+        
+        addPostflopAction(playersIn, foldedIdxs) {
+          const streets = ['Flop', 'Turn', 'River'];
+          const numStreets = Math.floor(Math.random() * 3) + 1;
+          
+          const betFractions = [0.25, 0.33, 0.33, 0.5, 0.5, 0.5, 0.67, 1.0];
+          
+          for (let s = 0; s < numStreets && playersIn >= 2; s++) {
+            const streetName = streets[s];
+            const actionOrder = this.getActionOrder('postflop');
+            
+            // Track state for this street
+            const streetState = {};
+            for (const idx of actionOrder) {
+              if (!foldedIdxs.has(idx)) {
+                streetState[idx] = { hasActed: false, currentBet: 0 };
+              }
+            }
+            
+            let currentBet = 0;
+            let bets = 0;
+            let actionComplete = false;
+            
+            while (!actionComplete && playersIn >= 2) {
+              actionComplete = true;
+              
+              for (const idx of actionOrder) {
+                if (foldedIdxs.has(idx)) continue;
+                
+                const state = streetState[idx];
+                const seat = this.trainerSeats[idx];
+                
+                // Check if this player needs to act
+                const needsToAct = !state.hasActed || state.currentBet < currentBet;
+                if (!needsToAct) continue;
+                
+                const rand = Math.random();
+                let action, amount = 0, totalBet = 0;
+                
+                const toCall = currentBet - state.currentBet;
+                
+                if (toCall === 0) {
+                  // No bet to face
+                  if (rand < 0.4) {
+                    action = 'check';
+                  } else {
+                    action = 'bet';
+                    const fraction = this.pickRandom(betFractions);
+                    totalBet = Math.round(this.trainerPot * fraction);
+                    if (totalBet < 2) totalBet = 2;
+                    amount = totalBet;
+                    currentBet = totalBet;
+                    this.trainerPot += amount;
+                    bets++;
+                    actionComplete = false;
+                  }
+                } else {
+                  // Facing a bet
+                  if (rand < 0.45) {
+                    action = 'fold';
+                    foldedIdxs.add(idx);
+                    playersIn--;
+                  } else if (rand < 0.9 || bets >= 2) {
+                    action = 'call';
+                    amount = toCall;
+                    totalBet = currentBet;
+                    this.trainerPot += amount;
+                  } else {
+                    action = 'raise';
+                    const raiseFraction = this.pickRandom(betFractions);
+                    totalBet = currentBet + Math.round(this.trainerPot * raiseFraction);
+                    amount = totalBet - state.currentBet;
+                    currentBet = totalBet;
+                    this.trainerPot += amount;
+                    bets++;
+                    actionComplete = false;
+                  }
+                }
+                
+                state.hasActed = true;
+                state.currentBet = totalBet;
+                
+                this.trainerActions.push({
+                  idx,
+                  position: seat.position,
+                  action,
+                  amount,
+                  totalBet,
+                  street: streetName
+                });
+                
+                if (playersIn <= 1) {
+                  actionComplete = true;
+                  break;
+                }
+              }
+            }
+            
+            this.trainerStreetPots[streetName] = this.trainerPot;
+          }
+        },
+        
+        getActionOrder(phase) {
+          if (phase === 'preflop') {
+            return [6, 5, 4, 3, 2, 1, 0, 8, 7]; // UTG first, BB last
+          } else {
+            return [8, 7, 6, 5, 4, 3, 2, 1, 0]; // SB first, BTN last
+          }
+        },
+        
+        amountToChips(amount, forPot = false) {
+          const stacks = [];
+          let remaining = amount;
+          
+          if (forPot) {
+            // For center pot, create a pile based on pot size
+            // Use multiple stacks to show larger amounts
+            const reds = Math.floor(remaining / 5);
+            remaining = remaining % 5;
+            
+            if (reds > 0) {
+              // Create 2-4 stacks based on pot size
+              const numStacks = Math.min(4, Math.max(2, Math.ceil(reds / 5)));
+              const chipsPerStack = Math.min(5, Math.ceil(reds / numStacks));
+              for (let i = 0; i < numStacks; i++) {
+                stacks.push({ color: 'red', count: chipsPerStack });
+              }
+            }
+            
+            if (remaining > 0 || stacks.length === 0) {
+              stacks.push({ color: 'white', count: Math.max(1, Math.min(remaining, 4)) });
+            }
+          } else {
+            // For player bets, use reds and whites (typical $1/$2 game)
+            const reds = Math.floor(remaining / 5);
+            if (reds > 0) {
+              stacks.push({ color: 'red', count: Math.min(reds, 4) });
+              remaining -= reds * 5;
+            }
+            
+            if (remaining > 0) {
+              stacks.push({ color: 'white', count: Math.min(remaining, 4) });
+            }
+          }
+          
+          return stacks;
+        },
+        
+        async nextTrainerRound() {
+          this.generateTrainerHand();
+          this.trainerPhase = 'watching';
+          this.trainerAnswer = '';
+          this.trainerActionIndex = 0;
+          this.trainerCurrentStreet = 'Preflop';
+          this.trainerCenterPotVisible = false;
+          this.trainerCenterPotChips = [];
+          
+          await this.playStreetActions();
+        },
+        
+        async playStreetActions() {
+          this.trainerPhase = 'watching';
+          
+          while (this.trainerActionIndex < this.trainerActions.length) {
+            const action = this.trainerActions[this.trainerActionIndex];
+            const seat = this.trainerSeats[action.idx];
+            
+            // Check if street is changing - if so, quiz first
+            const nextStreet = action.street || 'Preflop';
+            if (nextStreet !== this.trainerCurrentStreet) {
+              // Collect chips and quiz about current street
+              await this.collectChipsToCenter();
+              this.askStreetPotQuestion();
+              return; // Will continue after quiz
+            }
+            
+            seat.isActing = true;
+            
+            let actionText = '';
+            if (action.action === 'fold') {
+              actionText = `${seat.position} folds`;
+            } else if (action.action === 'check') {
+              actionText = `${seat.position} checks`;
+            } else if (action.action === 'call') {
+              actionText = `${seat.position} calls`;
+            } else if (action.action === 'raise') {
+              actionText = `${seat.position} raises to $${action.totalBet}`;
+            } else if (action.action === 'bet') {
+              actionText = `${seat.position} bets $${action.totalBet}`;
+            }
+            
+            this.trainerCurrentAction = actionText;
+            this.trainerActionVisible = true;
+            
+            if (action.action === 'fold') {
+              seat.hasFolded = true;
+            } else if (action.totalBet > 0) {
+              seat.hasChips = true;
+              seat.chipStacks = this.amountToChips(action.totalBet);
+            }
+            
+            await this.sleep(2000);
+            
+            seat.isActing = false;
+            this.trainerActionVisible = false;
+            
+            await this.sleep(300);
+            
+            this.trainerActionIndex++;
+          }
+          
+          // All actions done - final quiz
+          await this.collectChipsToCenter();
+          this.askStreetPotQuestion();
+        },
+        
+        askStreetPotQuestion() {
+          // Get actions from current street that we can ask about
+          const streetActions = this.trainerActions.filter(a => 
+            (a.street || 'Preflop') === this.trainerCurrentStreet &&
+            (a.action === 'call' || a.action === 'raise' || a.action === 'bet')
+          );
+          
+          // 60% pot question, 40% action question (if there are askable actions)
+          const askAction = streetActions.length > 0 && Math.random() > 0.6;
+          
+          if (askAction) {
+            const targetAction = this.pickRandom(streetActions);
+            const streetLabel = this.trainerCurrentStreet === 'Preflop' ? 'preflop' : `on the ${this.trainerCurrentStreet.toLowerCase()}`;
+            this.trainerActionQuestion = `What did ${targetAction.position} do ${streetLabel}?`;
+            this.trainerCorrectAnswer = (targetAction.action === 'bet' || targetAction.action === 'raise') ? 'raise' : 'call';
+            this.trainerPhase = 'answer-action';
+          } else {
+            this.trainerActionQuestion = `What's the pot?`;
+            this.trainerCorrectAnswer = this.trainerStreetPots[this.trainerCurrentStreet];
+            this.trainerPhase = 'answer-pot';
+            this.trainerAnswer = '';
+            this.$nextTick(() => {
+              if (this.$refs.potInput) this.$refs.potInput.focus();
+            });
+          }
+        },
+        
+        async continueAfterQuiz() {
+          // Move to next street if there are more actions
+          if (this.trainerActionIndex < this.trainerActions.length) {
+            const nextAction = this.trainerActions[this.trainerActionIndex];
+            const nextStreet = nextAction.street || 'Preflop';
+            this.trainerCurrentStreet = nextStreet;
+            this.trainerStreet = nextStreet;
+            await this.sleep(600);
+            await this.playStreetActions();
+          } else {
+            // Hand is over, start new hand
+            this.nextTrainerRound();
+          }
+        },
+        
+        async collectChipsToCenter() {
+          // Calculate total chips on table
+          let totalOnTable = 0;
+          for (const seat of this.trainerSeats) {
+            if (seat.hasChips && seat.chipStacks.length > 0) {
+              for (const stack of seat.chipStacks) {
+                const value = stack.color === 'black' ? 100 : stack.color === 'green' ? 25 : stack.color === 'red' ? 5 : 1;
+                totalOnTable += value * stack.count;
+              }
+            }
+          }
+          
+          if (totalOnTable > 0) {
+            // Add to center pot
+            const existingCenter = this.trainerCenterPotChips.reduce((sum, stack) => {
+              const value = stack.color === 'black' ? 100 : stack.color === 'green' ? 25 : stack.color === 'red' ? 5 : 1;
+              return sum + value * stack.count;
+            }, 0);
+            
+            this.trainerCenterPotChips = this.amountToChips(existingCenter + totalOnTable, true);
+            this.trainerCenterPotVisible = true;
+            
+            // Clear chips from seats
+            for (const seat of this.trainerSeats) {
+              seat.hasChips = false;
+              seat.chipStacks = [];
+            }
+            
+            await this.sleep(400);
+          }
+        },
+        
+        sleep(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        },
+        
+        async checkPotAnswer() {
+          const answer = parseInt(this.trainerAnswer.replace(/[$,]/g, ''), 10);
+          const tolerance = this.trainerCorrectAnswer * 0.05;
+          const isCorrect = Math.abs(answer - this.trainerCorrectAnswer) <= Math.max(tolerance, 2);
+          
+          this.trainerTotal++;
+          if (isCorrect) {
+            this.trainerCorrect++;
+            this.trainerLastCorrect = true;
+            this.trainerFeedbackText = `Correct! $${this.trainerCorrectAnswer}`;
+          } else {
+            this.trainerLastCorrect = false;
+            this.trainerFeedbackText = `$${this.trainerCorrectAnswer} (you said $${answer || 0})`;
+          }
+          
+          this.trainerPhase = 'feedback';
+          
+          // Brief pause then continue
+          await this.sleep(1500);
+          await this.continueAfterQuiz();
+        },
+        
+        async checkActionAnswer(answer) {
+          const isCorrect = answer === this.trainerCorrectAnswer;
+          
+          this.trainerTotal++;
+          if (isCorrect) {
+            this.trainerCorrect++;
+            this.trainerLastCorrect = true;
+            this.trainerFeedbackText = `Correct!`;
+          } else {
+            this.trainerLastCorrect = false;
+            const actionLabel = this.trainerCorrectAnswer === 'raise' ? 'raised/bet' : 'called';
+            this.trainerFeedbackText = `They ${actionLabel}`;
+          }
+          
+          this.trainerPhase = 'feedback';
+          
+          // Brief pause then continue
+          await this.sleep(1500);
+          await this.continueAfterQuiz();
         }
       };
     }
