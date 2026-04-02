@@ -945,20 +945,13 @@
           </template>
         </div>
 
-        <!-- Instructions -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <p class="small text-muted mb-0">
-            Click hands to select, then edit. <kbd>Esc</kbd> to clear.
-          </p>
-          <div class="d-flex gap-2">
-            <button x-show="editScenario" 
-                    class="btn btn-sm scenario-btn" 
-                    @click="selectEmptyHands()"
-                    x-text="`Select empty (${getEmptyCount()})`"></button>
-            <button x-show="editScenario" 
-                    class="btn btn-sm btn-outline-danger" 
-                    @click="clearScenario(editScenario)">Clear scenario</button>
-          </div>
+        <!-- Selection buttons -->
+        <div class="d-flex flex-wrap gap-2 mb-3" x-show="editScenario">
+          <button class="btn btn-sm btn-raise" @click="selectByAction('r')" x-text="`Raise (${getActionCount('r')})`"></button>
+          <button class="btn btn-sm btn-call" @click="selectByAction('c')" x-text="`Call (${getActionCount('c')})`"></button>
+          <button class="btn btn-sm btn-fold" @click="selectByAction('f')" x-text="`Fold (${getActionCount('f')})`"></button>
+          <button class="btn btn-sm scenario-btn" @click="selectEmptyHands()" x-text="`Empty (${getEmptyCount()})`"></button>
+          <button class="btn btn-sm scenario-btn" @click="selectedHands = []" x-show="selectedHands.length > 0">Clear Selection</button>
         </div>
 
         <!-- Hand Grid -->
@@ -974,11 +967,18 @@
         </div>
 
         <!-- Legend -->
-        <div class="mb-4 small" style="color: var(--text-muted)">
+        <div class="mb-3 small" style="color: var(--text-muted)">
           <span class="badge me-1" style="background: var(--action-raise)">raise</span>
           <span class="badge me-1" style="background: var(--action-call)">call</span>
           <span class="badge me-1" style="background: var(--action-fold); color: var(--text-muted)">fold</span>
           <span class="badge" style="background: var(--bg-card); border: 1px dashed var(--border-light); color: var(--text-muted)">empty</span>
+        </div>
+        
+        <!-- Clear scenario -->
+        <div class="mb-4" x-show="editScenario">
+          <button class="btn btn-sm btn-outline-danger" @click="clearScenario(editScenario)">
+            Reset scenario data
+          </button>
         </div>
 
         <!-- Hand Editor Panel -->
@@ -1825,9 +1825,29 @@
           return count;
         },
         
+        getActionCount(action) {
+          if (!this.editScenario) return 0;
+          let count = 0;
+          for (const hand of HAND_LIST) {
+            const a = this.getMyAction(this.editScenario, hand);
+            if (action === 'r' && (a === 'r' || a === '3')) count++;
+            else if (a === action) count++;
+          }
+          return count;
+        },
+        
         selectEmptyHands() {
           if (!this.editScenario) return;
           this.selectedHands = HAND_LIST.filter(hand => !this.getMyAction(this.editScenario, hand));
+        },
+        
+        selectByAction(action) {
+          if (!this.editScenario) return;
+          this.selectedHands = HAND_LIST.filter(hand => {
+            const a = this.getMyAction(this.editScenario, hand);
+            if (action === 'r') return a === 'r' || a === '3';
+            return a === action;
+          });
         },
         
         getSelectedAction(scenario) {
