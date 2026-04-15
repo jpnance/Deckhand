@@ -953,6 +953,15 @@
           <button class="btn btn-sm scenario-btn" @click="selectEmptyHands()" x-text="`Empty (${getEmptyCount()})`"></button>
           <button class="btn btn-sm scenario-btn" @click="selectedHands = []" x-show="selectedHands.length > 0">Clear Selection</button>
         </div>
+        
+        <!-- Range adjustment buttons -->
+        <div class="d-flex flex-wrap gap-2 mb-3" x-show="editScenario">
+          <span class="small text-muted align-self-center me-1">Adjust raise range:</span>
+          <button class="btn btn-sm btn-outline-secondary" @click="tightenRange(5)">−5</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="tightenRange(1)">−1</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="loosenRange(1)">+1</button>
+          <button class="btn btn-sm btn-outline-secondary" @click="loosenRange(5)">+5</button>
+        </div>
 
         <!-- Hand Grid -->
         <div class="edit-grid mb-4">
@@ -1848,6 +1857,55 @@
             if (action === 'r') return a === 'r' || a === '3';
             return a === action;
           });
+        },
+        
+        loosenRange(n) {
+          if (!this.editScenario) return;
+          const scenario = this.editScenario;
+          const raiseAction = SCENARIOS[scenario].actions.includes('3') ? '3' : 'r';
+          
+          // Find hands currently marked as raise
+          const currentRaises = new Set();
+          for (const hand of HAND_LIST) {
+            const a = this.getMyAction(scenario, hand);
+            if (a === 'r' || a === '3') currentRaises.add(hand);
+          }
+          
+          // Find next N hands in equity ranking that aren't already raises
+          let added = 0;
+          for (const hand of EQUITY_RANKING) {
+            if (added >= n) break;
+            if (!currentRaises.has(hand)) {
+              if (!this.myRanges[scenario]) this.myRanges[scenario] = {};
+              this.myRanges[scenario][hand] = { [raiseAction]: 1 };
+              added++;
+            }
+          }
+          
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        },
+        
+        tightenRange(n) {
+          if (!this.editScenario) return;
+          const scenario = this.editScenario;
+          
+          // Find hands currently marked as raise, in reverse equity order (weakest first)
+          const currentRaises = [];
+          for (const hand of [...EQUITY_RANKING].reverse()) {
+            const a = this.getMyAction(scenario, hand);
+            if (a === 'r' || a === '3') currentRaises.push(hand);
+          }
+          
+          // Remove N weakest raises (set to fold)
+          let removed = 0;
+          for (const hand of currentRaises) {
+            if (removed >= n) break;
+            if (!this.myRanges[scenario]) this.myRanges[scenario] = {};
+            this.myRanges[scenario][hand] = { 'f': 1 };
+            removed++;
+          }
+          
+          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
         },
         
         getSelectedAction(scenario) {
