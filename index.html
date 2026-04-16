@@ -2625,7 +2625,8 @@
         exportData() {
           const exportObj = {
             ranges: this.ranges,
-            scenarioRanges: this.scenarioRanges
+            scenarioRanges: this.scenarioRanges,
+            quizStats: this.quizStats
           };
           const json = JSON.stringify(exportObj);
           if (navigator.clipboard) {
@@ -2662,6 +2663,12 @@
                 for (const scenario in data.scenarioRanges) {
                   this.scenarioRanges[scenario] = data.scenarioRanges[scenario];
                 }
+              }
+              if (data.quizStats) {
+                for (const key in data.quizStats) {
+                  this.quizStats[key] = data.quizStats[key];
+                }
+                this.saveQuizStats();
               }
             } else {
               // Handle old myRanges format - create ranges from scenarios
