@@ -13,7 +13,20 @@ const SCENARIOS = {
   'BB:LP':   { position: 'BB',  situation: 'limped',    description: 'Limped pot',      actions: 'cr' },
 };
 
-const SCENARIO_KEYS = Object.keys(SCENARIOS);
+const SCENARIO_KEYS = [
+  'EP:O',     // EP open
+  'EP:vW',    // EP vs weak
+  'CO:O',     // CO open
+  'CO:vW',    // CO vs weak
+  'BTN:O',    // BTN open
+  'BTN:vW',   // BTN vs weak
+  'SB:O',     // SB open
+  'SB:LP',    // SB with limpers
+  'BB:LP',    // BB limped pot
+  'B:vW',     // Blinds vs weak
+  'B:vS',     // Blinds vs steal
+  'ALL:vStr', // vs strong raise
+];
 
 const SCENARIO_LABELS = {
   'EP:O':     'EP open',
