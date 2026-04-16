@@ -2656,22 +2656,16 @@
             
             // Handle new format
             if (data.ranges) {
-              for (const rangeId in data.ranges) {
-                this.ranges[rangeId] = data.ranges[rangeId];
-              }
-              if (data.scenarioRanges) {
-                for (const scenario in data.scenarioRanges) {
-                  this.scenarioRanges[scenario] = data.scenarioRanges[scenario];
-                }
-              }
-              if (data.quizStats) {
-                for (const key in data.quizStats) {
-                  this.quizStats[key] = data.quizStats[key];
-                }
-                this.saveQuizStats();
-              }
+              this.ranges = data.ranges;
+              this.scenarioRanges = data.scenarioRanges || {};
+              this.quizStats = data.quizStats || {};
+              this.saveQuizStats();
             } else {
-              // Handle old myRanges format - create ranges from scenarios
+              // Handle old myRanges format - replace with converted data
+              this.ranges = {};
+              this.scenarioRanges = {};
+              this.quizStats = {};
+              
               for (const scenario in data) {
                 const rangeId = 'range_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 const hands = {};
@@ -2697,6 +2691,7 @@
                   this.scenarioRanges[scenario] = rangeId;
                 }
               }
+              this.saveQuizStats();
             }
             
             this.saveRanges();
