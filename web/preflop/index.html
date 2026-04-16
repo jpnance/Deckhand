@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Preflop Range Builder</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <style>
     :root {
       /* Backgrounds */
@@ -912,7 +913,7 @@
     
     .trainer-stats {
       display: flex;
-      gap: 2rem;
+      gap: 0.5rem;
       justify-content: center;
       font-size: 0.9rem;
       color: var(--text-muted);
@@ -920,6 +921,68 @@
     .trainer-stats .stat-value {
       font-weight: bold;
       color: var(--text-primary);
+    }
+    
+    .scenario-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+    .scenario-link-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem;
+      background: var(--bg-card);
+      border-radius: 6px;
+    }
+    .scenario-link-label {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+    
+    .quiz-feedback {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .quiz-feedback.correct {
+      background: var(--action-call);
+      color: white;
+    }
+    .quiz-feedback.wrong {
+      background: var(--action-raise);
+      color: white;
+    }
+    
+    .feedback-grid {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      gap: 2px;
+      max-width: 320px;
+    }
+    .feedback-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      font-weight: 500;
+      border-radius: 2px;
+      background: var(--bg-muted);
+      color: var(--text-muted);
+    }
+    .feedback-cell.action-f { background: var(--action-fold); color: var(--text-primary); }
+    .feedback-cell.action-c { background: var(--action-call); color: white; }
+    .feedback-cell.action-r { background: var(--action-raise); color: white; }
+    .feedback-cell.missed {
+      outline: 2px solid var(--text-primary);
+      outline-offset: -1px;
     }
     
     @media (max-width: 576px) {
@@ -935,21 +998,18 @@
     <!-- Menu Mode -->
     <template x-if="mode === 'menu'">
       <div class="text-center py-5">
-        <h3 class="mb-4">Preflop Range Builder</h3>
-        <p class="text-muted mb-4">Build your preflop ranges by responding to scenarios.</p>
+        <h3 class="mb-4">Preflop Trainer</h3>
+        <p class="text-muted mb-4">Build and test your preflop ranges.</p>
         <div class="d-flex flex-column gap-3 align-items-center">
-          <button class="btn btn-primary-action btn-lg" @click="startBuilding()">
-            Build Ranges
+          <button class="btn btn-primary-action btn-lg" @click="startTraining()">
+            Train Ranges
           </button>
           <button class="btn btn-call btn-lg" @click="mode = 'edit'">
             My Ranges
           </button>
-          <button class="btn btn-raise btn-lg" @click="startTrainer()">
-            Action Trainer
-          </button>
         </div>
         <div class="mt-4">
-          <small class="text-muted" x-text="`${totalRecorded} responses recorded`"></small>
+          <small class="text-muted" x-text="`${rangeList.length} ranges, ${linkedScenarioCount} scenarios linked`"></small>
         </div>
         <div class="mt-4 d-flex justify-content-center gap-2">
           <button class="btn btn-sm btn-outline-secondary" @click="exportData()">Export</button>
@@ -988,54 +1048,85 @@
       </div>
     </template>
 
-    <!-- Build Mode Header -->
-    <template x-if="mode === 'build'">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0">Build Ranges</h5>
-        <div class="stats-bar d-flex align-items-center gap-3">
-          <select class="form-select form-select-sm" style="width: auto;" @change="setScheme($event.target.value)" :value="colorScheme">
-            <option value="sage">Sage</option>
-            <option value="ocean">Ocean</option>
-            <option value="sunset">Sunset</option>
-            <option value="lavender">Lavender</option>
-            <option value="mint">Mint</option>
-            <option value="coral">Coral</option>
-            <option value="forest">Forest</option>
-            <option value="sand">Sand</option>
-            <option value="slate">Slate</option>
-            <option value="rose">Rose</option>
-          </select>
-          <span style="color: var(--text-muted)" x-text="`${sessionCount} this session`"></span>
-          <button class="btn btn-sm scenario-btn" @click="mode = 'menu'" title="Done (Q)">
-            Done
+    <!-- Train Setup Mode -->
+    <template x-if="mode === 'train-setup'">
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="mb-0">Train Ranges</h5>
+          <button class="btn btn-sm scenario-btn" @click="mode = 'menu'">Back</button>
+        </div>
+        
+        <p class="text-muted mb-3">Link ranges to scenarios for training. Only linked scenarios will be quizzed.</p>
+        
+        <div class="scenario-links mb-4">
+          <template x-for="key in SCENARIO_KEYS" :key="key">
+            <div class="scenario-link-row">
+              <span class="scenario-link-label" x-text="SCENARIO_LABELS[key]"></span>
+              <select class="form-select form-select-sm" 
+                      style="width: auto; min-width: 150px;"
+                      @change="linkScenarioToRange(key, $event.target.value || null)">
+                <option value="" :selected="!scenarioRanges[key]">— Not linked —</option>
+                <template x-for="range in rangeList" :key="range.id">
+                  <option :value="range.id" :selected="scenarioRanges[key] === range.id" x-text="range.name"></option>
+                </template>
+              </select>
+            </div>
+          </template>
+        </div>
+        
+        <div class="text-center">
+          <button class="btn btn-primary-action btn-lg" 
+                  @click="startRangeQuiz()"
+                  :disabled="linkedScenarioCount === 0">
+            Start Training
           </button>
+          <div x-show="linkedScenarioCount === 0" class="text-muted small mt-2">
+            Link at least one scenario to begin
+          </div>
+        </div>
+        
+        <div class="text-center mt-4">
+          <button class="btn btn-sm btn-outline-danger" @click="resetQuizStats()">Reset Training Stats</button>
         </div>
       </div>
     </template>
 
-    <!-- Build Mode -->
-    <template x-if="mode === 'build'">
+    <!-- Train Quiz Mode -->
+    <template x-if="mode === 'train-quiz'">
       <div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="mb-0">Training</h5>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-outline-secondary" @click="mode = 'train-setup'" title="Settings"><i class="bi bi-gear"></i></button>
+            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'">Done</button>
+          </div>
+        </div>
+
+        <!-- Scenario Label -->
+        <div class="text-center mb-3">
+          <span class="badge bg-secondary" x-text="SCENARIO_LABELS[quizScenario]"></span>
+        </div>
+
         <!-- Table Display -->
         <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
           <template x-for="(pos, i) in positions" :key="i">
             <div class="position-seat"
                  :class="{
-                   'you': i === yourPosition,
-                   'raiser': i === raiserPosition,
-                   'caller': callerPositions.includes(i),
-                   'folded': i < yourPosition && i !== raiserPosition && !callerPositions.includes(i),
-                   'waiting': i > yourPosition
+                   'you': i === quizYourPosition,
+                   'raiser': i === quizRaiserPosition,
+                   'caller': quizCallerPositions.includes(i),
+                   'folded': i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i),
+                   'waiting': i > quizYourPosition
                  }">
               <div x-text="pos"></div>
               <div class="small">
-                <span x-show="i === yourPosition">?</span>
-                <span x-show="i === raiserPosition">raise</span>
-                <span x-show="callerPositions.includes(i)">call</span>
-                <span x-show="i < yourPosition && i !== raiserPosition && !callerPositions.includes(i)">fold</span>
-                <span x-show="i > yourPosition && i === 7">½ BB</span>
-                <span x-show="i > yourPosition && i === 8">1 BB</span>
-                <span x-show="i > yourPosition && i < 7">-</span>
+                <span x-show="i === quizYourPosition">?</span>
+                <span x-show="i === quizRaiserPosition">raise</span>
+                <span x-show="quizCallerPositions.includes(i)">call</span>
+                <span x-show="i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i)">fold</span>
+                <span x-show="i > quizYourPosition && i === 7">½ BB</span>
+                <span x-show="i > quizYourPosition && i === 8">1 BB</span>
+                <span x-show="i > quizYourPosition && i < 7">-</span>
               </div>
             </div>
           </template>
@@ -1043,36 +1134,52 @@
 
         <!-- Villain Read -->
         <div class="text-center villain-read mb-3">
-          <span x-html="villainRead || '&nbsp;'"></span>
+          <span x-html="quizVillainRead || '&nbsp;'"></span>
         </div>
 
         <!-- Your Hand -->
         <div class="d-flex justify-content-center gap-2 mb-4">
-          <div class="card-display" :class="card1Color">
-            <div class="card-rank" x-text="card1Rank"></div>
-            <div class="card-suit" x-html="suitSvg(card1Suit)"></div>
+          <div class="card-display" :class="quizCard1Color">
+            <div class="card-rank" x-text="quizCard1Rank"></div>
+            <div class="card-suit" x-html="suitSvg(quizCard1Suit)"></div>
           </div>
-          <div class="card-display" :class="card2Color">
-            <div class="card-rank" x-text="card2Rank"></div>
-            <div class="card-suit" x-html="suitSvg(card2Suit)"></div>
+          <div class="card-display" :class="quizCard2Color">
+            <div class="card-rank" x-text="quizCard2Rank"></div>
+            <div class="card-suit" x-html="suitSvg(quizCard2Suit)"></div>
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-          <button class="btn btn-fold action-btn" 
-                  x-show="availableActions.includes('f')"
-                  @click="recordResponse('f')"><u>F</u>old</button>
-          <button class="btn btn-call action-btn" 
-                  x-show="availableActions.includes('c')"
-                  @click="recordResponse('c')" 
-                  x-html="scenarioKey === 'BB:LP' ? '<u>C</u>heck' : '<u>C</u>all'"></button>
-          <button class="btn btn-raise action-btn" 
-                  x-show="availableActions.includes('r')"
-                  @click="recordResponse('r')"><u>R</u>aise</button>
-          <button class="btn btn-raise action-btn" 
-                  x-show="availableActions.includes('3')"
-                  @click="recordResponse('3')"><u>R</u>e-raise</button>
+        <!-- Action Buttons (during question) -->
+        <template x-if="quizPhase === 'question'">
+          <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+            <button class="btn btn-fold action-btn" 
+                    x-show="quizAvailableActions.includes('f')"
+                    @click="answerQuiz('f')"><u>F</u>old</button>
+            <button class="btn btn-call action-btn" 
+                    x-show="quizAvailableActions.includes('c')"
+                    @click="answerQuiz('c')" 
+                    x-html="quizScenario === 'BB:LP' ? '<u>C</u>heck' : '<u>C</u>all'"></button>
+            <button class="btn btn-raise action-btn" 
+                    x-show="quizAvailableActions.includes('r') || quizAvailableActions.includes('3')"
+                    @click="answerQuiz('r')"><u>R</u>aise</button>
+          </div>
+        </template>
+
+        <!-- Feedback (only shown on wrong answers) -->
+        <div x-show="quizPhase === 'feedback'" class="text-center mb-4">
+          <div class="quiz-feedback wrong mb-3">
+            Wrong — should <span x-text="quizCorrectActionLabel"></span>
+          </div>
+          
+          <div class="feedback-grid mx-auto mb-3">
+            <template x-for="cell in gridCells" :key="'fb-' + cell.idx">
+              <div class="feedback-cell"
+                   :class="getFeedbackCellClass(cell.hand)"
+                   x-text="cell.hand"></div>
+            </template>
+          </div>
+          
+          <button class="btn btn-primary-action" @click="nextQuizQuestion()">Next</button>
         </div>
       </div>
     </template>
@@ -1473,21 +1580,28 @@
         scenarioRanges,
         currentRangeId: null,
         
-        // Build mode state
-        scenarioKey: null,
-        hand: null,
-        yourPosition: 0,
-        raiserPosition: -1,
-        callerPositions: [],
-        card1Rank: '',
-        card1Suit: '',
-        card2Rank: '',
-        card2Suit: '',
-        card1Color: 'black',
-        card2Color: 'black',
-        villainRead: '',
-        availableActions: [],
-        sessionCount: 0,
+        // Quiz/Training state
+        quizStats: JSON.parse(localStorage.getItem('quizStats') || '{}'),
+        quizRecent: [],
+        quizScenario: null,
+        quizHand: null,
+        quizYourPosition: 0,
+        quizRaiserPosition: -1,
+        quizCallerPositions: [],
+        quizCard1Rank: '',
+        quizCard1Suit: '',
+        quizCard2Rank: '',
+        quizCard2Suit: '',
+        quizCard1Color: 'black',
+        quizCard2Color: 'black',
+        quizVillainRead: '',
+        quizAvailableActions: [],
+        quizPhase: 'question',
+        quizCorrect: 0,
+        quizTotal: 0,
+        quizLastCorrect: false,
+        quizCorrectAction: null,
+        quizCorrectActionLabel: '',
         
         // Edit mode state
         selectedHands: [],
@@ -1562,17 +1676,22 @@
             
             const key = e.key.toLowerCase();
             
-            // Build mode shortcuts
-            if (this.mode === 'build') {
-              if (key === 'f' && this.availableActions.includes('f')) {
-                this.recordResponse('f');
-              } else if (key === 'c' && this.availableActions.includes('c')) {
-                this.recordResponse('c');
+            // Quiz mode shortcuts
+            if (this.mode === 'train-quiz' && this.quizPhase === 'question') {
+              if (key === 'f' && this.quizAvailableActions.includes('f')) {
+                this.answerQuiz('f');
+              } else if (key === 'c' && this.quizAvailableActions.includes('c')) {
+                this.answerQuiz('c');
               } else if (key === 'r') {
-                if (this.availableActions.includes('r')) this.recordResponse('r');
-                else if (this.availableActions.includes('3')) this.recordResponse('3');
+                if (this.quizAvailableActions.includes('r') || this.quizAvailableActions.includes('3')) {
+                  this.answerQuiz('r');
+                }
               } else if (key === 'q' || key === 'escape') {
                 this.mode = 'menu';
+              }
+            } else if (this.mode === 'train-quiz' && this.quizPhase === 'feedback') {
+              if (key === ' ' || key === 'enter' || key === 'n') {
+                this.nextQuizQuestion();
               }
             }
             
@@ -1599,10 +1718,217 @@
           document.documentElement.setAttribute('data-scheme', scheme);
         },
         
-        startBuilding() {
-          this.sessionCount = 0;
-          this.mode = 'build';
-          this.nextQuestion();
+        get linkedScenarioCount() {
+          return SCENARIO_KEYS.filter(k => this.scenarioRanges[k]).length;
+        },
+        
+        startTraining() {
+          if (this.linkedScenarioCount > 0) {
+            this.startRangeQuiz();
+          } else {
+            this.mode = 'train-setup';
+          }
+        },
+        
+        startRangeQuiz() {
+          // Decay right counts at session start
+          for (const key in this.quizStats) {
+            if (this.quizStats[key].right > 0) {
+              this.quizStats[key].right--;
+            }
+          }
+          this.saveQuizStats();
+          
+          this.quizCorrect = 0;
+          this.quizTotal = 0;
+          this.quizRecent = [];
+          this.mode = 'train-quiz';
+          this.nextQuizQuestion();
+        },
+        
+        saveQuizStats() {
+          localStorage.setItem('quizStats', JSON.stringify(this.quizStats));
+        },
+        
+        resetQuizStats() {
+          if (confirm('Reset all training stats? This cannot be undone.')) {
+            this.quizStats = {};
+            this.saveQuizStats();
+          }
+        },
+        
+        getQuizPriority(scenario, hand) {
+          const key = `${scenario}|${hand}`;
+          const stats = this.quizStats[key] || { right: 0, wrong: 0 };
+          return (stats.wrong + 1) / (stats.right + 1);
+        },
+        
+        selectNextQuizPair() {
+          // Get all valid scenario+hand pairs (only linked scenarios, only hands with actions)
+          const candidates = [];
+          
+          for (const scenario of SCENARIO_KEYS) {
+            const rangeId = this.scenarioRanges[scenario];
+            if (!rangeId) continue;
+            
+            const range = this.ranges[rangeId];
+            if (!range?.hands) continue;
+            
+            for (const hand of Object.keys(range.hands)) {
+              const key = `${scenario}|${hand}`;
+              if (this.quizRecent.includes(key)) continue;
+              
+              candidates.push({
+                scenario,
+                hand,
+                priority: this.getQuizPriority(scenario, hand)
+              });
+            }
+          }
+          
+          if (candidates.length === 0) {
+            // If all filtered out by recent, clear recent and try again
+            if (this.quizRecent.length > 0) {
+              this.quizRecent = [];
+              return this.selectNextQuizPair();
+            }
+            return null;
+          }
+          
+          // Weighted random selection
+          const totalWeight = candidates.reduce((sum, c) => sum + c.priority, 0);
+          let random = Math.random() * totalWeight;
+          
+          for (const candidate of candidates) {
+            random -= candidate.priority;
+            if (random <= 0) {
+              return { scenario: candidate.scenario, hand: candidate.hand };
+            }
+          }
+          
+          // Fallback
+          return candidates[candidates.length - 1];
+        },
+        
+        nextQuizQuestion() {
+          const pair = this.selectNextQuizPair();
+          
+          if (!pair) {
+            alert('No hands to quiz! Make sure your linked ranges have hands defined.');
+            this.mode = 'train-setup';
+            return;
+          }
+          
+          this.quizScenario = pair.scenario;
+          this.quizHand = pair.hand;
+          this.quizPhase = 'question';
+          
+          // Add to recent (max 50)
+          const key = `${pair.scenario}|${pair.hand}`;
+          this.quizRecent.push(key);
+          if (this.quizRecent.length > 50) {
+            this.quizRecent.shift();
+          }
+          
+          // Set up the display based on scenario situation
+          const scenario = SCENARIOS[this.quizScenario];
+          this.quizAvailableActions = scenario.actions.split('');
+          this.quizYourPosition = this.getPositionIndex(scenario.position, scenario.situation);
+          this.quizRaiserPosition = -1;
+          this.quizCallerPositions = [];
+          this.quizVillainRead = '';
+          
+          if (scenario.situation === 'open') {
+            this.quizVillainRead = '';
+          } else if (scenario.situation === 'vs_steal') {
+            this.quizRaiserPosition = this.pickRandom([5, 6]); // CO or BTN
+            this.quizVillainRead = `${POSITIONS[this.quizRaiserPosition]} steal attempt`;
+          } else if (scenario.situation === 'vs_weak') {
+            const earlier = [];
+            for (let i = 0; i < this.quizYourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.quizRaiserPosition = this.pickRandom(earlier);
+            this.quizVillainRead = `${POSITIONS[this.quizRaiserPosition]} is loose`;
+          } else if (scenario.situation === 'vs_strong') {
+            const earlier = [];
+            for (let i = 0; i < this.quizYourPosition; i++) earlier.push(i);
+            if (earlier.length === 0) earlier.push(0);
+            this.quizRaiserPosition = this.pickRandom(earlier);
+            this.quizVillainRead = `${POSITIONS[this.quizRaiserPosition]} is tight`;
+          } else if (scenario.situation === 'limped') {
+            const maxLimpers = this.quizYourPosition;
+            for (let i = 0; i < maxLimpers; i++) {
+              if (Math.random() < 0.6 || this.quizCallerPositions.length === 0) {
+                this.quizCallerPositions.push(i);
+              }
+            }
+            if (this.quizCallerPositions.length === 0 && maxLimpers > 0) {
+              this.quizCallerPositions.push(maxLimpers - 1);
+            }
+            this.quizVillainRead = `${this.quizCallerPositions.length} limper${this.quizCallerPositions.length !== 1 ? 's' : ''}`;
+          }
+          
+          // Set up cards
+          const handStr = this.quizHand;
+          const rank1 = handStr[0];
+          const rank2 = handStr[1];
+          const suited = handStr.endsWith('s');
+          const isPair = handStr.length === 2;
+          
+          const suits = ['♠', '♥', '♦', '♣'];
+          const suit1 = this.pickRandom(suits);
+          let suit2;
+          if (isPair) {
+            suit2 = this.pickRandom(suits.filter(s => s !== suit1));
+          } else if (suited) {
+            suit2 = suit1;
+          } else {
+            suit2 = this.pickRandom(suits.filter(s => s !== suit1));
+          }
+          
+          this.quizCard1Rank = rank1 === 'T' ? '10' : rank1;
+          this.quizCard1Suit = suit1;
+          this.quizCard2Rank = rank2 === 'T' ? '10' : rank2;
+          this.quizCard2Suit = suit2;
+          this.quizCard1Color = (suit1 === '♥' || suit1 === '♦') ? 'red' : 'black';
+          this.quizCard2Color = (suit2 === '♥' || suit2 === '♦') ? 'red' : 'black';
+        },
+        
+        answerQuiz(answer) {
+          const rangeId = this.scenarioRanges[this.quizScenario];
+          const correctAction = this.ranges[rangeId]?.hands?.[this.quizHand];
+          
+          // Normalize for comparison (r and 3 are both "raise")
+          const normalizedAnswer = answer;
+          const normalizedCorrect = (correctAction === '3') ? 'r' : correctAction;
+          
+          const isCorrect = normalizedAnswer === normalizedCorrect;
+          
+          // Update stats
+          const key = `${this.quizScenario}|${this.quizHand}`;
+          if (!this.quizStats[key]) {
+            this.quizStats[key] = { right: 0, wrong: 0 };
+          }
+          
+          if (isCorrect) {
+            this.quizStats[key].right++;
+            this.quizStats[key].wrong = Math.max(0, this.quizStats[key].wrong - 1);
+            this.quizCorrect++;
+            this.quizTotal++;
+            this.saveQuizStats();
+            // Auto-advance on correct
+            this.nextQuizQuestion();
+          } else {
+            this.quizStats[key].wrong++;
+            this.quizTotal++;
+            this.saveQuizStats();
+            // Show feedback on wrong
+            this.quizLastCorrect = false;
+            this.quizCorrectAction = correctAction;
+            this.quizCorrectActionLabel = correctAction === 'f' ? 'fold' : 
+                                          correctAction === 'c' ? 'call/check' : 'raise';
+            this.quizPhase = 'feedback';
+          }
         },
         
         pickRandom(arr) {
@@ -1960,15 +2286,34 @@
         setRangeAction(rangeId, hand, action) {
           if (!this.ranges[rangeId]) return;
           if (!this.ranges[rangeId].hands) this.ranges[rangeId].hands = {};
-          this.ranges[rangeId].hands[hand] = action;
-          this.saveRanges();
+          
+          const oldAction = this.ranges[rangeId].hands[hand];
+          if (oldAction !== action) {
+            this.ranges[rangeId].hands[hand] = action;
+            this.saveRanges();
+            this.clearQuizStatsForRangeHand(rangeId, hand);
+          }
         },
         
         clearRangeHand(rangeId, hand) {
           if (this.ranges[rangeId]?.hands?.[hand]) {
             delete this.ranges[rangeId].hands[hand];
             this.saveRanges();
+            this.clearQuizStatsForRangeHand(rangeId, hand);
           }
+        },
+        
+        clearQuizStatsForRangeHand(rangeId, hand) {
+          // Clear quiz stats for any scenario that links to this range
+          for (const scenario in this.scenarioRanges) {
+            if (this.scenarioRanges[scenario] === rangeId) {
+              const key = `${scenario}|${hand}`;
+              if (this.quizStats[key]) {
+                delete this.quizStats[key];
+              }
+            }
+          }
+          this.saveQuizStats();
         },
         
         saveRanges() {
@@ -2022,16 +2367,34 @@
         },
         
         get rangeList() {
+          // Build a map of scenario label -> order index
+          const scenarioOrder = {};
+          SCENARIO_KEYS.forEach((key, idx) => {
+            scenarioOrder[SCENARIO_LABELS[key]] = idx;
+          });
+          
           return Object.entries(this.ranges).map(([id, range]) => ({
             id,
             name: range.name,
             handCount: Object.keys(range.hands || {}).length
-          })).sort((a, b) => a.name.localeCompare(b.name));
+          })).sort((a, b) => {
+            const aOrder = scenarioOrder[a.name];
+            const bOrder = scenarioOrder[b.name];
+            
+            // Scenario-named ranges come first, in scenario order
+            if (aOrder !== undefined && bOrder !== undefined) {
+              return aOrder - bOrder;
+            }
+            if (aOrder !== undefined) return -1;
+            if (bOrder !== undefined) return 1;
+            
+            // Other ranges sorted alphabetically
+            return a.name.localeCompare(b.name);
+          });
         },
         
         selectRange(rangeId) {
           this.currentRangeId = rangeId;
-          this.selectedHands = [];
         },
         
         createFromScenario(scenarioKey) {
@@ -2723,6 +3086,24 @@
           
           if (this.currentRangeId) {
             const action = this.getRangeAction(this.currentRangeId, hand);
+            if (action === 'f') classes.push('action-f');
+            else if (action === 'c') classes.push('action-c');
+            else if (action === 'r' || action === '3') classes.push('action-r');
+          }
+          
+          return classes.join(' ');
+        },
+        
+        getFeedbackCellClass(hand) {
+          const classes = [];
+          
+          // Highlight the missed hand
+          if (hand === this.quizHand) classes.push('missed');
+          
+          // Color by action in the quiz scenario's range
+          const rangeId = this.scenarioRanges[this.quizScenario];
+          if (rangeId) {
+            const action = this.getRangeAction(rangeId, hand);
             if (action === 'f') classes.push('action-f');
             else if (action === 'c') classes.push('action-c');
             else if (action === 'r' || action === '3') classes.push('action-r');
