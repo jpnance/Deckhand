@@ -1096,64 +1096,78 @@
               <option value="slate">Slate</option>
               <option value="rose">Rose</option>
             </select>
-            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'; selectedHands = []; editScenario = null">Back</button>
+            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'; selectedHands = []; currentRangeId = null">Back</button>
           </div>
         </div>
 
         <div class="ranges-three-col">
           <!-- Left Column: Navigation & Context -->
           <div class="ranges-nav">
+            <!-- Ranges List -->
             <div class="panel">
-              <div class="panel-title">Scenarios</div>
+              <div class="panel-title">Ranges</div>
               <div class="scenario-list">
-                <button class="scenario-item" :class="{ 'active': !editScenario }" @click="editScenario = null">All</button>
-                <template x-for="key in SCENARIO_KEYS" :key="key">
+                <template x-for="range in rangeList" :key="range.id">
                   <button class="scenario-item" 
-                          :class="{ 'active': editScenario === key }"
-                          @click="editScenario = key"
-                          x-text="SCENARIO_LABELS[key]"></button>
+                          :class="{ 'active': currentRangeId === range.id }"
+                          @click="selectRange(range.id)"
+                          x-text="range.name + ' (' + range.handCount + ')'"></button>
                 </template>
+                <div x-show="rangeList.length === 0" class="text-muted small p-2">No ranges yet</div>
+              </div>
+              <div class="d-flex gap-1 mt-2">
+                <button class="btn btn-xs btn-outline-secondary flex-grow-1" @click="promptCreateRange()">+ New</button>
+                <select class="form-select form-select-sm" style="width: auto; font-size: 0.75rem;" @change="createFromScenario($event.target.value); $event.target.value = ''">
+                  <option value="">From scenario...</option>
+                  <template x-for="key in SCENARIO_KEYS" :key="key">
+                    <option :value="key" x-text="SCENARIO_LABELS[key]"></option>
+                  </template>
+                </select>
               </div>
             </div>
             
             <!-- Stats -->
-            <div class="panel" x-show="editScenario">
+            <div class="panel" x-show="currentRangeId">
               <div class="panel-title">Stats</div>
               <div class="stats-grid">
-                <div><span class="stat-label">Coverage</span> <span x-text="getCoverage(editScenario) + '/169'"></span></div>
-                <div><span class="stat-label">VPIP</span> <span x-text="(getScenarioStats(editScenario)?.vpip ?? '–') + '%'"></span></div>
-                <div><span class="stat-label">PFR</span> <span x-text="(getScenarioStats(editScenario)?.pfr ?? '–') + '%'"></span></div>
-                <template x-if="SCENARIOS[editScenario]?.actions.includes('3')">
-                  <div><span class="stat-label">3bet</span> <span x-text="(getScenarioStats(editScenario)?.threeBet ?? '–') + '%'"></span></div>
-                </template>
+                <div><span class="stat-label">Hands</span> <span x-text="getRangeHandCount(currentRangeId) + '/169'"></span></div>
+                <div><span class="stat-label">VPIP</span> <span x-text="(getRangeStats(currentRangeId)?.vpip ?? '–') + '%'"></span></div>
+                <div><span class="stat-label">PFR</span> <span x-text="(getRangeStats(currentRangeId)?.pfr ?? '–') + '%'"></span></div>
               </div>
             </div>
             
             <!-- Range Descriptions -->
-            <div class="panel" x-show="editScenario">
-              <template x-if="describeRangeList(editScenario, 'r').length > 0">
+            <div class="panel" x-show="currentRangeId">
+              <template x-if="describeCurrentRange('r').length > 0">
                 <div class="range-desc">
                   <div class="range-desc-label raise">Raise</div>
                   <ul class="range-list">
-                    <template x-for="item in describeRangeList(editScenario, 'r')" :key="item">
+                    <template x-for="item in describeCurrentRange('r')" :key="item">
                       <li x-text="item"></li>
                     </template>
                   </ul>
                 </div>
               </template>
-              <template x-if="describeRangeList(editScenario, 'c').length > 0">
+              <template x-if="describeCurrentRange('c').length > 0">
                 <div class="range-desc">
                   <div class="range-desc-label call">Call</div>
                   <ul class="range-list">
-                    <template x-for="item in describeRangeList(editScenario, 'c')" :key="item">
+                    <template x-for="item in describeCurrentRange('c')" :key="item">
                       <li x-text="item"></li>
                     </template>
                   </ul>
                 </div>
               </template>
-              <div x-show="describeRangeList(editScenario, 'r').length === 0 && describeRangeList(editScenario, 'c').length === 0" class="text-muted small">
-                No range data yet
+              <div x-show="describeCurrentRange('r').length === 0 && describeCurrentRange('c').length === 0" class="text-muted small">
+                No hands set yet
               </div>
+            </div>
+            
+            <!-- Range Actions -->
+            <div class="panel" x-show="currentRangeId">
+              <button class="btn btn-xs btn-outline-secondary w-100 mb-1" @click="promptRenameRange()">Rename</button>
+              <button class="btn btn-xs btn-outline-secondary w-100 mb-1" @click="promptDuplicateRange()">Duplicate</button>
+              <button class="btn btn-xs btn-outline-danger w-100" @click="promptDeleteRange()">Delete</button>
             </div>
           </div>
 
@@ -1164,7 +1178,7 @@
                 <div class="edit-cell"
                      :class="getEditCellClass(cell.hand)"
                      :style="getEditCellStyle(cell.hand)"
-                     @click="editScenario && toggleHandSelection(cell.hand)"
+                     @click="currentRangeId && toggleHandSelection(cell.hand)"
                      x-text="cell.hand">
                 </div>
               </template>
@@ -1180,7 +1194,7 @@
           </div>
 
           <!-- Right Column: Editor -->
-          <div class="ranges-editor" x-show="editScenario">
+          <div class="ranges-editor" x-show="currentRangeId">
             <!-- Selection Tools -->
             <div class="panel">
               <div class="panel-title">Select</div>
@@ -1224,9 +1238,9 @@
               <div class="panel-title">Set Action</div>
               <div class="editor-row action-row">
                 <div class="editor-actions">
-                  <button class="btn btn-sm btn-raise" @click="setSelectedHandsAction('r')" :disabled="selectedHands.length === 0" x-show="SCENARIOS[editScenario]?.actions.includes('r') || SCENARIOS[editScenario]?.actions.includes('3')">Raise</button>
+                  <button class="btn btn-sm btn-raise" @click="setSelectedHandsAction('r')" :disabled="selectedHands.length === 0">Raise</button>
                   <button class="btn btn-sm btn-call" @click="setSelectedHandsAction('c')" :disabled="selectedHands.length === 0">Call</button>
-                  <button class="btn btn-sm btn-fold" @click="setSelectedHandsAction('f')" :disabled="selectedHands.length === 0" x-show="SCENARIOS[editScenario]?.actions.includes('f')">Fold</button>
+                  <button class="btn btn-sm btn-fold" @click="setSelectedHandsAction('f')" :disabled="selectedHands.length === 0">Fold</button>
                   <button class="btn btn-sm btn-outline-secondary" @click="clearSelectedHandsData()" :disabled="selectedHands.length === 0">Clear</button>
                 </div>
                 <button class="btn btn-sm scenario-btn ms-auto" @click="selectedHands = []" x-show="selectedHands.length > 0">Deselect</button>
@@ -1245,7 +1259,7 @@
             
             <!-- Reset -->
             <div class="panel">
-              <button class="btn btn-xs btn-outline-danger w-100" @click="clearScenario(editScenario)">Reset Scenario</button>
+              <button class="btn btn-xs btn-outline-danger w-100" @click="clearCurrentRange()">Reset Range</button>
             </div>
           </div>
         </div>
@@ -1404,26 +1418,60 @@
         }
       }
       
-      // Load saved ranges from localStorage
-      // Structure: { scenario: { hand: { action: count, ... }, ... }, ... }
-      let savedRanges = JSON.parse(localStorage.getItem('myRanges') || '{}');
+      // Load ranges from localStorage
+      // New structure: { rangeId: { name: "...", hands: { hand: action } } }
+      let ranges = JSON.parse(localStorage.getItem('ranges') || '{}');
       
-      // Migrate old format (action string) to new format (count object)
-      for (const scenario in savedRanges) {
-        for (const hand in savedRanges[scenario]) {
-          const val = savedRanges[scenario][hand];
-          if (typeof val === 'string') {
-            savedRanges[scenario][hand] = { [val]: 1 };
+      // Load scenario-to-range mappings
+      let scenarioRanges = JSON.parse(localStorage.getItem('scenarioRanges') || '{}');
+      
+      // Migrate from old myRanges format if needed
+      const oldMyRanges = JSON.parse(localStorage.getItem('myRanges') || '{}');
+      if (Object.keys(oldMyRanges).length > 0 && Object.keys(ranges).length === 0) {
+        // Migrate: create a range for each scenario that has data
+        for (const scenario in oldMyRanges) {
+          const rangeId = 'range_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          const hands = {};
+          
+          for (const hand in oldMyRanges[scenario]) {
+            const val = oldMyRanges[scenario][hand];
+            // Handle both old string format and count object format
+            if (typeof val === 'string') {
+              hands[hand] = val;
+            } else if (typeof val === 'object') {
+              // Get the dominant action from count object
+              let maxAction = null;
+              let maxCount = 0;
+              for (const action in val) {
+                if (val[action] > maxCount) {
+                  maxCount = val[action];
+                  maxAction = action;
+                }
+              }
+              if (maxAction) hands[hand] = maxAction;
+            }
+          }
+          
+          if (Object.keys(hands).length > 0) {
+            const label = SCENARIO_LABELS[scenario] || scenario;
+            ranges[rangeId] = { name: label, hands };
+            scenarioRanges[scenario] = rangeId;
           }
         }
+        
+        localStorage.setItem('ranges', JSON.stringify(ranges));
+        localStorage.setItem('scenarioRanges', JSON.stringify(scenarioRanges));
       }
-      localStorage.setItem('myRanges', JSON.stringify(savedRanges));
       
       return {
         mode: 'menu',
         positions: POSITIONS,
         gridCells,
-        myRanges: savedRanges,
+        
+        // Ranges (new model)
+        ranges,
+        scenarioRanges,
+        currentRangeId: null,
         
         // Build mode state
         scenarioKey: null,
@@ -1499,10 +1547,8 @@
         
         get totalRecorded() {
           let count = 0;
-          for (const scenario in this.myRanges) {
-            for (const hand in this.myRanges[scenario]) {
-              count += this.getResponseCount(scenario, hand);
-            }
+          for (const rangeId in this.ranges) {
+            count += Object.keys(this.ranges[rangeId]?.hands || {}).length;
           }
           return count;
         },
@@ -1537,8 +1583,8 @@
                   this.previewScenario = null;
                 } else if (this.selectedHands.length > 0) {
                   this.selectedHands = [];
-                } else if (this.editScenario) {
-                  this.editScenario = null;
+                } else if (this.currentRangeId) {
+                  this.currentRangeId = null;
                 } else {
                   this.mode = 'menu';
                 }
@@ -1842,14 +1888,15 @@
         },
         
         recordForScenario(scenario, action) {
-          if (!this.myRanges[scenario]) {
-            this.myRanges[scenario] = {};
+          // Get or create range for this scenario
+          let rangeId = this.scenarioRanges[scenario];
+          if (!rangeId) {
+            const label = SCENARIO_LABELS[scenario] || scenario;
+            rangeId = this.createRange(label);
+            this.scenarioRanges[scenario] = rangeId;
           }
-          if (!this.myRanges[scenario][this.hand]) {
-            this.myRanges[scenario][this.hand] = {};
-          }
-          const counts = this.myRanges[scenario][this.hand];
-          counts[action] = (counts[action] || 0) + 1;
+          
+          this.setRangeAction(rangeId, this.hand, action);
         },
         
         recordResponse(action) {
@@ -1896,52 +1943,248 @@
             }
           }
           
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
           this.nextQuestion();
         },
         
         getMyAction(scenario, hand) {
-          const counts = this.myRanges[scenario]?.[hand];
-          if (!counts) return null;
-          
-          // Return action with highest count
-          let maxAction = null;
-          let maxCount = 0;
-          for (const [action, count] of Object.entries(counts)) {
-            if (count > maxCount) {
-              maxCount = count;
-              maxAction = action;
-            }
-          }
-          return maxAction;
+          // Look up through scenarioRanges mapping
+          const rangeId = this.scenarioRanges[scenario];
+          if (!rangeId) return null;
+          return this.ranges[rangeId]?.hands?.[hand] || null;
         },
         
-        isAmbiguous(scenario, hand) {
-          const counts = this.myRanges[scenario]?.[hand];
-          if (!counts) return false;
+        getRangeAction(rangeId, hand) {
+          return this.ranges[rangeId]?.hands?.[hand] || null;
+        },
+        
+        setRangeAction(rangeId, hand, action) {
+          if (!this.ranges[rangeId]) return;
+          if (!this.ranges[rangeId].hands) this.ranges[rangeId].hands = {};
+          this.ranges[rangeId].hands[hand] = action;
+          this.saveRanges();
+        },
+        
+        clearRangeHand(rangeId, hand) {
+          if (this.ranges[rangeId]?.hands?.[hand]) {
+            delete this.ranges[rangeId].hands[hand];
+            this.saveRanges();
+          }
+        },
+        
+        saveRanges() {
+          localStorage.setItem('ranges', JSON.stringify(this.ranges));
+          localStorage.setItem('scenarioRanges', JSON.stringify(this.scenarioRanges));
+        },
+        
+        createRange(name) {
+          const rangeId = 'range_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          this.ranges[rangeId] = { name, hands: {} };
+          this.saveRanges();
+          return rangeId;
+        },
+        
+        duplicateRange(sourceRangeId, newName) {
+          const source = this.ranges[sourceRangeId];
+          if (!source) return null;
           
-          const actions = Object.keys(counts);
-          return actions.length > 1;
+          const rangeId = 'range_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          this.ranges[rangeId] = { 
+            name: newName || (source.name + ' (copy)'),
+            hands: { ...source.hands }
+          };
+          this.saveRanges();
+          return rangeId;
+        },
+        
+        renameRange(rangeId, newName) {
+          if (this.ranges[rangeId]) {
+            this.ranges[rangeId].name = newName;
+            this.saveRanges();
+          }
+        },
+        
+        deleteRange(rangeId) {
+          if (this.ranges[rangeId]) {
+            delete this.ranges[rangeId];
+            // Remove any scenario links to this range
+            for (const scenario in this.scenarioRanges) {
+              if (this.scenarioRanges[scenario] === rangeId) {
+                delete this.scenarioRanges[scenario];
+              }
+            }
+            this.saveRanges();
+          }
+        },
+        
+        linkScenarioToRange(scenario, rangeId) {
+          this.scenarioRanges[scenario] = rangeId;
+          this.saveRanges();
+        },
+        
+        get rangeList() {
+          return Object.entries(this.ranges).map(([id, range]) => ({
+            id,
+            name: range.name,
+            handCount: Object.keys(range.hands || {}).length
+          })).sort((a, b) => a.name.localeCompare(b.name));
+        },
+        
+        selectRange(rangeId) {
+          this.currentRangeId = rangeId;
+          this.selectedHands = [];
+        },
+        
+        createFromScenario(scenarioKey) {
+          if (!scenarioKey) return;
+          const label = SCENARIO_LABELS[scenarioKey] || scenarioKey;
+          const rangeId = this.createRange(label);
+          this.selectRange(rangeId);
+        },
+        
+        promptCreateRange() {
+          const name = prompt('Enter range name:');
+          if (name && name.trim()) {
+            const rangeId = this.createRange(name.trim());
+            this.selectRange(rangeId);
+          }
+        },
+        
+        promptRenameRange() {
+          if (!this.currentRangeId) return;
+          const range = this.ranges[this.currentRangeId];
+          if (!range) return;
+          
+          const newName = prompt('Enter new name:', range.name);
+          if (newName && newName.trim()) {
+            this.renameRange(this.currentRangeId, newName.trim());
+          }
+        },
+        
+        promptDuplicateRange() {
+          if (!this.currentRangeId) return;
+          const range = this.ranges[this.currentRangeId];
+          if (!range) return;
+          
+          const newName = prompt('Enter name for copy:', range.name + ' (copy)');
+          if (newName && newName.trim()) {
+            const newId = this.duplicateRange(this.currentRangeId, newName.trim());
+            if (newId) this.selectRange(newId);
+          }
+        },
+        
+        promptDeleteRange() {
+          if (!this.currentRangeId) return;
+          const range = this.ranges[this.currentRangeId];
+          if (!range) return;
+          
+          if (confirm(`Delete range "${range.name}"? This cannot be undone.`)) {
+            this.deleteRange(this.currentRangeId);
+            this.currentRangeId = null;
+          }
+        },
+        
+        getRangeHandCount(rangeId) {
+          return Object.keys(this.ranges[rangeId]?.hands || {}).length;
+        },
+        
+        getRangeStats(rangeId) {
+          const hands = this.ranges[rangeId]?.hands || {};
+          let vpipCombos = 0;
+          let pfrCombos = 0;
+          let totalCombos = 0;
+          
+          for (const hand in hands) {
+            const action = hands[hand];
+            const combos = this.getComboCount(hand);
+            totalCombos += combos;
+            
+            if (action === 'c' || action === 'r' || action === '3') {
+              vpipCombos += combos;
+            }
+            if (action === 'r' || action === '3') {
+              pfrCombos += combos;
+            }
+          }
+          
+          if (totalCombos === 0) return null;
+          
+          return {
+            vpip: Math.round(vpipCombos / totalCombos * 100),
+            pfr: Math.round(pfrCombos / totalCombos * 100)
+          };
+        },
+        
+        describeCurrentRange(action) {
+          if (!this.currentRangeId) return [];
+          
+          const hands = [];
+          const rangeHands = this.ranges[this.currentRangeId]?.hands || {};
+          const normalizedAction = action === 'r' ? ['r', '3'] : [action];
+          
+          for (const hand in rangeHands) {
+            if (normalizedAction.includes(rangeHands[hand])) {
+              hands.push(hand);
+            }
+          }
+          
+          if (hands.length === 0) return [];
+          if (hands.length === 169) return ['everything'];
+          
+          const handSet = new Set(hands);
+          const parts = [];
+          const described = new Set();
+          
+          for (const [groupName, group] of Object.entries(HAND_GROUPS)) {
+            const allInRange = group.all.filter(h => handSet.has(h));
+            
+            if (allInRange.length === 0) continue;
+            
+            if (allInRange.length === group.all.length) {
+              parts.push(groupName.toLowerCase());
+              group.all.forEach(h => described.add(h));
+            } else {
+              const sortedSubs = Object.entries(group.subgroups)
+                .sort((a, b) => b[1].length - a[1].length);
+              
+              for (const [subName, subHands] of sortedSubs) {
+                const subInRange = subHands.filter(h => handSet.has(h) && !described.has(h));
+                if (subInRange.length === subHands.length) {
+                  parts.push(`${subName.toLowerCase()} ${groupName.toLowerCase()}`);
+                  subHands.forEach(h => described.add(h));
+                }
+              }
+              
+              const remaining = allInRange.filter(h => !described.has(h));
+              if (remaining.length > 0) {
+                const compressed = this.compressRange(remaining);
+                if (compressed) {
+                  parts.push(compressed);
+                  remaining.forEach(h => described.add(h));
+                }
+              }
+            }
+          }
+          
+          const ungrouped = hands.filter(h => !described.has(h));
+          if (ungrouped.length > 0) {
+            const compressed = this.compressRange(ungrouped);
+            if (compressed) {
+              parts.push(compressed);
+            }
+          }
+          
+          return parts;
         },
         
         getResponseCount(scenario, hand) {
-          const counts = this.myRanges[scenario]?.[hand];
-          if (!counts) return 0;
-          return Object.values(counts).reduce((a, b) => a + b, 0);
+          // With new model, we just check if there's an action
+          return this.getMyAction(scenario, hand) ? 1 : 0;
         },
         
         getCoverage(scenario) {
-          const hands = this.myRanges[scenario] || {};
-          return Object.keys(hands).length;
-        },
-        
-        getAmbiguousCount(scenario) {
-          const hands = this.myRanges[scenario] || {};
-          let count = 0;
-          for (const hand of Object.keys(hands)) {
-            if (this.isAmbiguous(scenario, hand)) count++;
-          }
-          return count;
+          const rangeId = this.scenarioRanges[scenario];
+          if (!rangeId) return 0;
+          return Object.keys(this.ranges[rangeId]?.hands || {}).length;
         },
         
         getComboCount(hand) {
@@ -1984,22 +2227,24 @@
           };
         },
         
-        clearScenario(scenario) {
-          if (confirm(`Clear all recorded responses for "${SCENARIO_LABELS[scenario]}"?`)) {
-            delete this.myRanges[scenario];
-            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+        clearCurrentRange() {
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
+          const range = this.ranges[rangeId];
+          if (!range) return;
+          
+          if (confirm(`Clear all hands from "${range.name}"?`)) {
+            this.ranges[rangeId].hands = {};
+            this.saveRanges();
           }
         },
         
-        clearHand(scenario, hand) {
-          if (!this.myRanges[scenario]?.[hand]) return;
-          delete this.myRanges[scenario][hand];
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
-        },
-        
         exportData() {
-          const json = JSON.stringify(this.myRanges);
-          // Try to copy to clipboard, fall back to download
+          const exportObj = {
+            ranges: this.ranges,
+            scenarioRanges: this.scenarioRanges
+          };
+          const json = JSON.stringify(exportObj);
           if (navigator.clipboard) {
             navigator.clipboard.writeText(json).then(() => {
               alert('Data copied to clipboard!');
@@ -2024,16 +2269,47 @@
         importData() {
           try {
             const data = JSON.parse(this.importText);
-            // Merge with existing data
-            for (const scenario in data) {
-              if (!this.myRanges[scenario]) {
-                this.myRanges[scenario] = {};
+            
+            // Handle new format
+            if (data.ranges) {
+              for (const rangeId in data.ranges) {
+                this.ranges[rangeId] = data.ranges[rangeId];
               }
-              for (const hand in data[scenario]) {
-                this.myRanges[scenario][hand] = data[scenario][hand];
+              if (data.scenarioRanges) {
+                for (const scenario in data.scenarioRanges) {
+                  this.scenarioRanges[scenario] = data.scenarioRanges[scenario];
+                }
+              }
+            } else {
+              // Handle old myRanges format - create ranges from scenarios
+              for (const scenario in data) {
+                const rangeId = 'range_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const hands = {};
+                for (const hand in data[scenario]) {
+                  const val = data[scenario][hand];
+                  if (typeof val === 'string') {
+                    hands[hand] = val;
+                  } else if (typeof val === 'object') {
+                    let maxAction = null;
+                    let maxCount = 0;
+                    for (const action in val) {
+                      if (val[action] > maxCount) {
+                        maxCount = val[action];
+                        maxAction = action;
+                      }
+                    }
+                    if (maxAction) hands[hand] = maxAction;
+                  }
+                }
+                if (Object.keys(hands).length > 0) {
+                  const label = SCENARIO_LABELS[scenario] || scenario;
+                  this.ranges[rangeId] = { name: label, hands };
+                  this.scenarioRanges[scenario] = rangeId;
+                }
               }
             }
-            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+            
+            this.saveRanges();
             this.showImport = false;
             this.importText = '';
             alert('Data imported successfully!');
@@ -2053,19 +2329,21 @@
         },
         
         getEmptyCount() {
-          if (!this.editScenario) return 0;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return 0;
           let count = 0;
           for (const hand of HAND_LIST) {
-            if (!this.getMyAction(this.editScenario, hand)) count++;
+            if (!this.getRangeAction(rangeId, hand)) count++;
           }
           return count;
         },
         
         getActionCount(action) {
-          if (!this.editScenario) return 0;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return 0;
           let count = 0;
           for (const hand of HAND_LIST) {
-            const a = this.getMyAction(this.editScenario, hand);
+            const a = this.getRangeAction(rangeId, hand);
             if (action === 'r' && (a === 'r' || a === '3')) count++;
             else if (a === action) count++;
           }
@@ -2073,14 +2351,16 @@
         },
         
         selectEmptyHands() {
-          if (!this.editScenario) return;
-          this.selectedHands = HAND_LIST.filter(hand => !this.getMyAction(this.editScenario, hand));
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
+          this.selectedHands = HAND_LIST.filter(hand => !this.getRangeAction(rangeId, hand));
         },
         
         selectByAction(action) {
-          if (!this.editScenario) return;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
           this.selectedHands = HAND_LIST.filter(hand => {
-            const a = this.getMyAction(this.editScenario, hand);
+            const a = this.getRangeAction(rangeId, hand);
             if (action === 'r') return a === 'r' || a === '3';
             return a === action;
           });
@@ -2104,14 +2384,15 @@
         },
         
         loosenRange(n) {
-          if (!this.editScenario) return;
-          const scenario = this.editScenario;
-          const raiseAction = SCENARIOS[scenario].actions.includes('3') ? '3' : 'r';
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
+          
+          const raiseAction = 'r';
           
           // Find hands currently marked as raise
           const currentRaises = new Set();
           for (const hand of HAND_LIST) {
-            const a = this.getMyAction(scenario, hand);
+            const a = this.getRangeAction(rangeId, hand);
             if (a === 'r' || a === '3') currentRaises.add(hand);
           }
           
@@ -2120,23 +2401,20 @@
           for (const hand of EQUITY_RANKING) {
             if (added >= n) break;
             if (!currentRaises.has(hand)) {
-              if (!this.myRanges[scenario]) this.myRanges[scenario] = {};
-              this.myRanges[scenario][hand] = { [raiseAction]: 1 };
+              this.setRangeAction(rangeId, hand, raiseAction);
               added++;
             }
           }
-          
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
         },
         
         tightenRange(n) {
-          if (!this.editScenario) return;
-          const scenario = this.editScenario;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
           
           // Find hands currently marked as raise, in reverse equity order (weakest first)
           const currentRaises = [];
           for (const hand of [...EQUITY_RANKING].reverse()) {
-            const a = this.getMyAction(scenario, hand);
+            const a = this.getRangeAction(rangeId, hand);
             if (a === 'r' || a === '3') currentRaises.push(hand);
           }
           
@@ -2144,41 +2422,28 @@
           let removed = 0;
           for (const hand of currentRaises) {
             if (removed >= n) break;
-            if (!this.myRanges[scenario]) this.myRanges[scenario] = {};
-            this.myRanges[scenario][hand] = { 'f': 1 };
+            this.setRangeAction(rangeId, hand, 'f');
             removed++;
           }
-          
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
         },
         
         setSelectedHandsAction(action) {
-          const scenario = this.editScenario;
-          if (!scenario) return;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
           
-          const validActions = SCENARIOS[scenario].actions;
-          const finalAction = action === 'r' && validActions.includes('3') ? '3' : action;
-          
-          if (!this.myRanges[scenario]) {
-            this.myRanges[scenario] = {};
-          }
           for (const hand of this.selectedHands) {
-            this.myRanges[scenario][hand] = { [finalAction]: 1 };
+            this.setRangeAction(rangeId, hand, action);
           }
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
           this.selectedHands = [];
         },
         
         clearSelectedHandsData() {
-          const scenario = this.editScenario;
-          if (!scenario) return;
+          const rangeId = this.currentRangeId;
+          if (!rangeId) return;
           
           for (const hand of this.selectedHands) {
-            if (this.myRanges[scenario]?.[hand]) {
-              delete this.myRanges[scenario][hand];
-            }
+            this.clearRangeHand(rangeId, hand);
           }
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
           this.selectedHands = [];
         },
         
@@ -2430,8 +2695,8 @@
           const classes = [];
           if (this.selectedHands.includes(hand)) classes.push('selected');
           
-          if (this.editScenario) {
-            const action = this.getMyAction(this.editScenario, hand);
+          if (this.currentRangeId) {
+            const action = this.getRangeAction(this.currentRangeId, hand);
             if (action === 'f') classes.push('action-f');
             else if (action === 'c') classes.push('action-c');
             else if (action === 'r' || action === '3') classes.push('action-r');
@@ -2456,8 +2721,8 @@
           const classes = [];
           if (this.selectedHands.includes(hand)) classes.push('selected');
           
-          if (this.editScenario) {
-            const action = this.getMyAction(this.editScenario, hand);
+          if (this.currentRangeId) {
+            const action = this.getRangeAction(this.currentRangeId, hand);
             if (action === 'f') classes.push('action-f');
             else if (action === 'c') classes.push('action-c');
             else if (action === 'r' || action === '3') classes.push('action-r');
@@ -2467,7 +2732,7 @@
         },
         
         getEditCellStyle(hand) {
-          if (this.editScenario) return '';
+          if (this.currentRangeId) return '';
           
           const actions = this.getHandActions(hand);
           
