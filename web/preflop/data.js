@@ -89,11 +89,18 @@ const HAND_GROUPS = {
       'Small': ['65s', '54s', '43s']
     }
   },
-  'Suited Gappers': {
-    all: ['J9s', 'T8s', '97s', '86s', '75s', '64s', '53s', '42s', 'Q9s', 'J8s', 'T7s', '96s', '85s', '74s', '63s', '52s'],
+  'Suited 1-Gappers': {
+    all: ['J9s', 'T8s', '97s', '86s', '75s', '64s', '53s', '42s'],
     subgroups: {
-      '1-gap': ['J9s', 'T8s', '97s', '86s', '75s', '64s', '53s', '42s'],
-      '2-gap': ['Q9s', 'J8s', 'T7s', '96s', '85s', '74s', '63s', '52s']
+      'Big': ['J9s', 'T8s', '97s'],
+      'Small': ['86s', '75s', '64s', '53s', '42s']
+    }
+  },
+  'Suited 2-Gappers': {
+    all: ['Q9s', 'J8s', 'T7s', '96s', '85s', '74s', '63s', '52s'],
+    subgroups: {
+      'Big': ['Q9s', 'J8s', 'T7s'],
+      'Small': ['96s', '85s', '74s', '63s', '52s']
     }
   },
   'Offsuit Aces': {
