@@ -20,9 +20,9 @@ const SCENARIO_KEYS = [
   'CO:vW',    // CO vs weak
   'BTN:O',    // BTN open
   'BTN:vW',   // BTN vs weak
-  'SB:O',     // SB open
-  'SB:LP',    // SB with limpers
-  'BB:LP',    // BB limped pot
+  'SB:O',     // SB vs BB
+  'SB:LP',    // SB open
+  'BB:LP',    // BB open
   'B:vW',     // Blinds vs weak
   'B:vS',     // Blinds vs steal
   'ALL:vStr', // vs strong raise
@@ -32,15 +32,15 @@ const SCENARIO_LABELS = {
   'EP:O':     'EP open',
   'CO:O':     'CO open',
   'BTN:O':    'BTN open',
-  'SB:O':     'SB open',
+  'SB:O':     'SB vs BB',
   'EP:vW':    'EP vs weak',
   'CO:vW':    'CO vs weak',
   'BTN:vW':   'BTN vs weak',
   'B:vW':     'Blinds vs weak',
   'B:vS':     'Blinds vs steal',
   'ALL:vStr': 'vs strong raise',
-  'SB:LP':    'SB with limpers',
-  'BB:LP':    'BB limped pot',
+  'SB:LP':    'SB open',
+  'BB:LP':    'BB open',
 };
 
 const POSITIONS = ['UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
