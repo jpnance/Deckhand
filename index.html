@@ -379,12 +379,202 @@
       color: white;
     }
     
+    /* Ranges Layout */
+    .ranges-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .ranges-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ranges-columns {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    @media (min-width: 768px) {
+      .ranges-columns {
+        grid-template-columns: 180px 1fr 220px;
+      }
+    }
+    @media (min-width: 992px) {
+      .ranges-columns {
+        grid-template-columns: 200px 1fr 280px;
+      }
+    }
+    
+    .ranges-col-scenarios,
+    .ranges-col-tools {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .ranges-col-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .panel {
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+    .panel-stats {
+      font-size: 0.8rem;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--bg-muted);
+    }
+    .stat-label {
+      color: var(--text-muted);
+    }
+    
+    .range-descriptions {
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--bg-muted);
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+    .range-desc {
+      margin-bottom: 0.75rem;
+    }
+    .range-desc:last-child {
+      margin-bottom: 0;
+    }
+    .range-desc-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.65rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.25rem;
+    }
+    .range-desc-label.raise { color: var(--action-raise); }
+    .range-desc-label.call { color: var(--action-call); }
+    .range-list {
+      margin: 0;
+      padding-left: 1rem;
+      list-style: disc;
+    }
+    .range-list li {
+      margin-bottom: 0.1rem;
+    }
+    
+    .scenario-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .scenario-item {
+      text-align: left;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.8rem;
+      border: none;
+      background: transparent;
+      border-radius: 0.25rem;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+    .scenario-item:hover {
+      background: var(--bg-muted);
+    }
+    .scenario-item.active {
+      background: var(--text-primary);
+      color: white;
+    }
+    
+    .tool-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    
+    .btn-xs {
+      font-size: 0.7rem;
+      padding: 0.2rem 0.4rem;
+    }
+    
+    .grid-legend {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      font-size: 0.7rem;
+    }
+    
+    .hand-editor-inline {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-card);
+      border-radius: 0.5rem;
+      width: 100%;
+      max-width: 450px;
+    }
+    .hand-editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .hand-editor-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .select-section {
+      margin-bottom: 0.75rem;
+    }
+    .select-section:last-child {
+      margin-bottom: 0;
+    }
+    .select-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    
+    .hand-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .hand-group-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .hand-group-name {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hand-group-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem;
+    }
+    
     /* Grid Editor Styles */
     .edit-grid {
       display: grid;
       grid-template-columns: repeat(13, 1fr);
       gap: 3px;
-      max-width: 500px;
+      width: 100%;
+      max-width: 450px;
     }
     .edit-cell {
       aspect-ratio: 1;
@@ -424,69 +614,6 @@
     .edit-cell.action-none {
       background: var(--bg-card);
       border: 1px dashed var(--border-light);
-    }
-    
-    .hand-editor {
-      background: var(--bg-card);
-      border-radius: 0.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      max-width: 400px;
-    }
-    .scenario-row {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem;
-      border-bottom: 1px solid var(--bg-muted);
-    }
-    .scenario-row:last-child {
-      border-bottom: none;
-    }
-    .scenario-row-active {
-      background: var(--row-highlight);
-    }
-    .scenario-label {
-      flex: 1;
-      font-size: 0.85rem;
-      color: var(--accent-primary);
-      text-decoration: none;
-    }
-    .scenario-label:hover {
-      text-decoration: underline;
-    }
-    .action-radios {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .action-radio {
-      width: 32px;
-      height: 32px;
-      border-radius: 4px;
-      border: 2px solid var(--bg-muted);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.1s;
-    }
-    .action-radio:hover {
-      border-color: var(--text-muted);
-    }
-    .action-radio.active-f {
-      background: var(--action-fold);
-      border-color: var(--action-fold-hover);
-      color: var(--text-primary);
-    }
-    .action-radio.active-c {
-      background: var(--action-call);
-      border-color: var(--action-call);
-      color: white;
-    }
-    .action-radio.active-r, .action-radio.active-3 {
-      background: var(--action-raise);
-      border-color: var(--action-raise);
-      color: white;
     }
     
     .preview-modal {
@@ -879,8 +1006,9 @@
 
     <!-- My Ranges Mode -->
     <template x-if="mode === 'edit'">
-      <div>
-        <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="ranges-layout">
+        <!-- Header -->
+        <div class="ranges-header">
           <h5 class="mb-0">My Ranges</h5>
           <div class="d-flex align-items-center gap-2">
             <select class="form-select form-select-sm" style="width: auto;" @change="setScheme($event.target.value)" :value="colorScheme">
@@ -899,128 +1027,146 @@
           </div>
         </div>
 
-        <!-- Scenario Filter -->
-        <div class="scenario-grid mb-3">
-          <div class="scenario-group">
-            <div class="scenario-group-label">EP</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'EP:O' }" @click="editScenario = 'EP:O'">open</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'EP:vW' }" @click="editScenario = 'EP:vW'">vs weak</button>
-          </div>
-          <div class="scenario-group">
-            <div class="scenario-group-label">CO</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'CO:O' }" @click="editScenario = 'CO:O'">open</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'CO:vW' }" @click="editScenario = 'CO:vW'">vs weak</button>
-          </div>
-          <div class="scenario-group">
-            <div class="scenario-group-label">BTN</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'BTN:O' }" @click="editScenario = 'BTN:O'">open</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'BTN:vW' }" @click="editScenario = 'BTN:vW'">vs weak</button>
-          </div>
-          <div class="scenario-group">
-            <div class="scenario-group-label">SB</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'SB:O' }" @click="editScenario = 'SB:O'">open</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'SB:LP' }" @click="editScenario = 'SB:LP'">limpers</button>
-          </div>
-          <div class="scenario-group">
-            <div class="scenario-group-label">Blinds</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'BB:LP' }" @click="editScenario = 'BB:LP'">BB limped</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'B:vW' }" @click="editScenario = 'B:vW'">vs weak</button>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'B:vS' }" @click="editScenario = 'B:vS'">vs steal</button>
-          </div>
-          <div class="scenario-group">
-            <div class="scenario-group-label">Any</div>
-            <button class="scenario-pill" :class="{ 'active': editScenario === 'ALL:vStr' }" @click="editScenario = 'ALL:vStr'">vs strong</button>
-            <button class="scenario-pill" :class="{ 'active': !editScenario }" @click="editScenario = null">all</button>
-          </div>
-        </div>
-        
-        <!-- Stats for selected scenario -->
-        <div x-show="editScenario && getScenarioStats(editScenario)" class="mb-3 small text-muted">
-          <span x-text="SCENARIO_LABELS[editScenario]"></span>:
-          <span x-text="getCoverage(editScenario)"></span>/169,
-          VPIP <span x-text="getScenarioStats(editScenario)?.vpip + '%'"></span>,
-          PFR <span x-text="getScenarioStats(editScenario)?.pfr + '%'"></span>
-          <template x-if="SCENARIOS[editScenario]?.actions.includes('3')">
-            <span>, 3bet <span x-text="getScenarioStats(editScenario)?.threeBet + '%'"></span></span>
-          </template>
-        </div>
-
-        <!-- Selection buttons -->
-        <div class="d-flex flex-wrap gap-2 mb-3" x-show="editScenario">
-          <button class="btn btn-sm btn-raise" @click="selectByAction('r')" x-text="`Raise (${getActionCount('r')})`"></button>
-          <button class="btn btn-sm btn-call" @click="selectByAction('c')" x-text="`Call (${getActionCount('c')})`"></button>
-          <button class="btn btn-sm btn-fold" @click="selectByAction('f')" x-text="`Fold (${getActionCount('f')})`"></button>
-          <button class="btn btn-sm scenario-btn" @click="selectEmptyHands()" x-text="`Empty (${getEmptyCount()})`"></button>
-          <button class="btn btn-sm scenario-btn" @click="selectedHands = []" x-show="selectedHands.length > 0">Clear Selection</button>
-        </div>
-        
-        <!-- Range adjustment buttons -->
-        <div class="d-flex flex-wrap gap-2 mb-3" x-show="editScenario">
-          <span class="small text-muted align-self-center me-1">Adjust raise range:</span>
-          <button class="btn btn-sm btn-outline-secondary" @click="tightenRange(5)">−5</button>
-          <button class="btn btn-sm btn-outline-secondary" @click="tightenRange(1)">−1</button>
-          <button class="btn btn-sm btn-outline-secondary" @click="loosenRange(1)">+1</button>
-          <button class="btn btn-sm btn-outline-secondary" @click="loosenRange(5)">+5</button>
-        </div>
-
-        <!-- Hand Grid -->
-        <div class="edit-grid mb-4">
-          <template x-for="cell in gridCells" :key="cell.idx">
-            <div class="edit-cell"
-                 :class="getEditCellClass(cell.hand)"
-                 :style="getEditCellStyle(cell.hand)"
-                 @click="toggleHandSelection(cell.hand)"
-                 x-text="cell.hand">
-            </div>
-          </template>
-        </div>
-
-        <!-- Legend -->
-        <div class="mb-3 small" style="color: var(--text-muted)">
-          <span class="badge me-1" style="background: var(--action-raise)">raise</span>
-          <span class="badge me-1" style="background: var(--action-call)">call</span>
-          <span class="badge me-1" style="background: var(--action-fold); color: var(--text-muted)">fold</span>
-          <span class="badge" style="background: var(--bg-card); border: 1px dashed var(--border-light); color: var(--text-muted)">empty</span>
-        </div>
-        
-        <!-- Clear scenario -->
-        <div class="mb-4" x-show="editScenario">
-          <button class="btn btn-sm btn-outline-danger" @click="clearScenario(editScenario)">
-            Reset scenario data
-          </button>
-        </div>
-
-        <!-- Hand Editor Panel -->
-        <div x-show="selectedHands.length > 0" class="hand-editor p-3">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0" x-text="selectedHands.length === 1 ? selectedHands[0] : selectedHands.length + ' hands'"></h6>
-            <button class="btn btn-sm scenario-btn" @click="selectedHands = []">Clear</button>
-          </div>
-          
-          <template x-for="key in SCENARIO_KEYS" :key="key">
-            <div class="scenario-row" :class="{ 'scenario-row-active': editScenario === key }">
-              <a href="#" class="scenario-label" @click.prevent="showPreview(key)" x-text="SCENARIO_LABELS[key]"></a>
-              <span x-show="hasConflict(key)" class="badge me-2" style="background: var(--accent-warning); font-size: 0.65rem;">mixed</span>
-              <div class="action-radios">
-                <div class="action-radio"
-                     x-show="SCENARIOS[key].actions.includes('f')"
-                     :class="{ 'active-f': getSelectedAction(key) === 'f' }"
-                     @click="toggleAction(key, 'f')">F</div>
-                <div class="action-radio"
-                     :class="{ 'active-c': getSelectedAction(key) === 'c' }"
-                     @click="toggleAction(key, 'c')">C</div>
-                <div class="action-radio"
-                     :class="{ 'active-r': getSelectedAction(key) === 'r' || getSelectedAction(key) === '3' }"
-                     @click="toggleAction(key, SCENARIOS[key].actions.includes('3') ? '3' : 'r')">R</div>
+        <div class="ranges-columns">
+          <!-- Left Column: Scenarios -->
+          <div class="ranges-col-scenarios">
+            <div class="panel">
+              <div class="panel-title">Scenarios</div>
+              <div class="scenario-list">
+                <button class="scenario-item" :class="{ 'active': !editScenario }" @click="editScenario = null">All</button>
+                <template x-for="key in SCENARIO_KEYS" :key="key">
+                  <button class="scenario-item" 
+                          :class="{ 'active': editScenario === key }"
+                          @click="editScenario = key"
+                          x-text="SCENARIO_LABELS[key]"></button>
+                </template>
+              </div>
+              
+              <!-- Stats -->
+              <div x-show="editScenario && getScenarioStats(editScenario)" class="panel-stats">
+                <div><span class="stat-label">Coverage:</span> <span x-text="getCoverage(editScenario)"></span>/169</div>
+                <div><span class="stat-label">VPIP:</span> <span x-text="getScenarioStats(editScenario)?.vpip + '%'"></span></div>
+                <div><span class="stat-label">PFR:</span> <span x-text="getScenarioStats(editScenario)?.pfr + '%'"></span></div>
+                <template x-if="SCENARIOS[editScenario]?.actions.includes('3')">
+                  <div><span class="stat-label">3bet:</span> <span x-text="getScenarioStats(editScenario)?.threeBet + '%'"></span></div>
+                </template>
+              </div>
+              
+              <!-- Range Descriptions -->
+              <div x-show="editScenario" class="range-descriptions">
+                <template x-if="describeRangeList(editScenario, 'r').length > 0">
+                  <div class="range-desc">
+                    <div class="range-desc-label raise">Raise</div>
+                    <ul class="range-list">
+                      <template x-for="item in describeRangeList(editScenario, 'r')" :key="item">
+                        <li x-text="item"></li>
+                      </template>
+                    </ul>
+                  </div>
+                </template>
+                <template x-if="describeRangeList(editScenario, 'c').length > 0">
+                  <div class="range-desc">
+                    <div class="range-desc-label call">Call</div>
+                    <ul class="range-list">
+                      <template x-for="item in describeRangeList(editScenario, 'c')" :key="item">
+                        <li x-text="item"></li>
+                      </template>
+                    </ul>
+                  </div>
+                </template>
               </div>
             </div>
-          </template>
-          
-          <div class="d-flex flex-wrap gap-2 mt-3">
-            <button class="btn btn-sm btn-fold" @click="setAllScenarios('f')">All Fold</button>
-            <button class="btn btn-sm btn-call" @click="setAllScenarios('c')">All Call</button>
-            <button class="btn btn-sm btn-raise" @click="setAllScenarios('r')">All Raise</button>
-            <button class="btn btn-sm btn-outline-danger ms-auto" @click="clearSelectedHands()">Clear Data</button>
+          </div>
+
+          <!-- Middle Column: Grid -->
+          <div class="ranges-col-grid">
+            <div class="edit-grid">
+              <template x-for="cell in gridCells" :key="cell.idx">
+                <div class="edit-cell"
+                     :class="getEditCellClass(cell.hand)"
+                     :style="getEditCellStyle(cell.hand)"
+                     @click="toggleHandSelection(cell.hand)"
+                     x-text="cell.hand">
+                </div>
+              </template>
+            </div>
+            
+            <!-- Legend -->
+            <div class="grid-legend">
+              <span class="badge" style="background: var(--action-raise)">raise</span>
+              <span class="badge" style="background: var(--action-call)">call</span>
+              <span class="badge" style="background: var(--action-fold); color: var(--text-muted)">fold</span>
+              <span class="badge" style="background: var(--bg-card); border: 1px dashed var(--border-light); color: var(--text-muted)">empty</span>
+            </div>
+            
+            <!-- Quick Actions (below grid) -->
+            <div x-show="selectedHands.length > 0 && editScenario" class="hand-editor-inline">
+              <div class="hand-editor-header">
+                <span x-text="selectedHands.length + ' hands'"></span>
+                <button class="btn btn-xs scenario-btn" @click="selectedHands = []">Deselect</button>
+              </div>
+              <div class="hand-editor-actions">
+                <button class="btn btn-sm btn-raise" @click="setSelectedHandsAction('r')" x-show="SCENARIOS[editScenario].actions.includes('r') || SCENARIOS[editScenario].actions.includes('3')">Raise</button>
+                <button class="btn btn-sm btn-call" @click="setSelectedHandsAction('c')">Call</button>
+                <button class="btn btn-sm btn-fold" @click="setSelectedHandsAction('f')" x-show="SCENARIOS[editScenario].actions.includes('f')">Fold</button>
+                <button class="btn btn-sm btn-outline-secondary" @click="clearSelectedHandsData()">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Tools -->
+          <div class="ranges-col-tools">
+            <!-- Selection Panel -->
+            <div class="panel" x-show="editScenario">
+              <div class="panel-title">Select</div>
+              
+              <!-- By action -->
+              <div class="select-section">
+                <div class="select-label">By action:</div>
+                <div class="tool-buttons">
+                  <button class="btn btn-xs btn-raise" @click="selectByAction('r')" x-text="`Raise (${getActionCount('r')})`"></button>
+                  <button class="btn btn-xs btn-call" @click="selectByAction('c')" x-text="`Call (${getActionCount('c')})`"></button>
+                  <button class="btn btn-xs btn-fold" @click="selectByAction('f')" x-text="`Fold (${getActionCount('f')})`"></button>
+                  <button class="btn btn-xs scenario-btn" @click="selectEmptyHands()" x-text="`Empty (${getEmptyCount()})`"></button>
+                </div>
+              </div>
+              
+              <!-- Hand groups -->
+              <div class="select-section">
+                <div class="select-label">By group:</div>
+                <div class="hand-groups">
+                  <template x-for="(group, groupName) in HAND_GROUPS" :key="groupName">
+                    <div class="hand-group-row">
+                      <div class="hand-group-name" x-text="groupName"></div>
+                      <div class="hand-group-buttons">
+                        <button class="btn btn-xs scenario-btn" @click="selectGroup(group.all)" :title="compressRange(group.all)">All</button>
+                        <template x-for="(hands, subName) in group.subgroups" :key="subName">
+                          <button class="btn btn-xs scenario-btn" @click="selectGroup(hands)" x-text="subName" :title="compressRange(hands)"></button>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+              
+              <button class="btn btn-xs scenario-btn w-100 mt-2" @click="selectedHands = []" x-show="selectedHands.length > 0">Clear Selection</button>
+            </div>
+            
+            <!-- Adjust Panel -->
+            <div class="panel" x-show="editScenario">
+              <div class="panel-title">Adjust Raise Range</div>
+              <div class="tool-buttons">
+                <button class="btn btn-xs btn-outline-secondary" @click="tightenRange(5)">−5</button>
+                <button class="btn btn-xs btn-outline-secondary" @click="tightenRange(1)">−1</button>
+                <button class="btn btn-xs btn-outline-secondary" @click="loosenRange(1)">+1</button>
+                <button class="btn btn-xs btn-outline-secondary" @click="loosenRange(5)">+5</button>
+              </div>
+            </div>
+            
+            <!-- Reset -->
+            <div class="panel" x-show="editScenario">
+              <button class="btn btn-sm btn-outline-danger w-100" @click="clearScenario(editScenario)">Reset Scenario</button>
+            </div>
           </div>
         </div>
 
@@ -1218,6 +1364,7 @@
         // Edit mode state
         selectedHands: [],
         editScenario: null,
+        HAND_GROUPS,
         previewScenario: null,
         previewYourPosition: 0,
         previewRaiserPosition: -1,
@@ -1859,6 +2006,15 @@
           });
         },
         
+        selectGroup(hands) {
+          // Add to current selection (don't replace)
+          const newSelection = new Set(this.selectedHands);
+          for (const hand of hands) {
+            newSelection.add(hand);
+          }
+          this.selectedHands = [...newSelection];
+        },
+        
         loosenRange(n) {
           if (!this.editScenario) return;
           const scenario = this.editScenario;
@@ -1908,80 +2064,249 @@
           localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
         },
         
-        getSelectedAction(scenario) {
-          if (this.selectedHands.length === 0) return null;
-          const first = this.getMyAction(scenario, this.selectedHands[0]);
-          for (const hand of this.selectedHands) {
-            if (this.getMyAction(scenario, hand) !== first) return null;
-          }
-          return first;
-        },
-        
-        hasConflict(scenario) {
-          if (this.selectedHands.length <= 1) return false;
-          const actions = new Set();
-          for (const hand of this.selectedHands) {
-            const action = this.getMyAction(scenario, hand);
-            if (action) actions.add(action === '3' ? 'r' : action);
-          }
-          return actions.size > 1;
-        },
-        
-        setSelectedAction(scenario, action) {
+        setSelectedHandsAction(action) {
+          const scenario = this.editScenario;
+          if (!scenario) return;
+          
+          const validActions = SCENARIOS[scenario].actions;
+          const finalAction = action === 'r' && validActions.includes('3') ? '3' : action;
+          
           if (!this.myRanges[scenario]) {
             this.myRanges[scenario] = {};
           }
           for (const hand of this.selectedHands) {
-            this.myRanges[scenario][hand] = { [action]: 1 };
+            this.myRanges[scenario][hand] = { [finalAction]: 1 };
           }
           localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+          this.selectedHands = [];
         },
         
-        toggleAction(scenario, action) {
-          const currentAction = this.getSelectedAction(scenario);
-          const normalizedCurrent = currentAction === '3' ? 'r' : currentAction;
-          const normalizedNew = action === '3' ? 'r' : action;
+        clearSelectedHandsData() {
+          const scenario = this.editScenario;
+          if (!scenario) return;
           
-          if (normalizedCurrent === normalizedNew) {
-            // Clear the action for all selected hands
-            for (const hand of this.selectedHands) {
-              if (this.myRanges[scenario]?.[hand]) {
-                delete this.myRanges[scenario][hand];
-              }
-            }
-            localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
-          } else {
-            this.setSelectedAction(scenario, action);
-          }
-        },
-        
-        setAllScenarios(action) {
-          for (const scenario of SCENARIO_KEYS) {
-            const validActions = SCENARIOS[scenario].actions;
-            if (!validActions.includes(action)) continue;
-            
-            if (!this.myRanges[scenario]) {
-              this.myRanges[scenario] = {};
-            }
-            const finalAction = action === 'r' && validActions.includes('3') ? '3' : action;
-            for (const hand of this.selectedHands) {
-              this.myRanges[scenario][hand] = { [finalAction]: 1 };
-            }
-          }
-          localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
-        },
-        
-        clearSelectedHands() {
-          const label = this.selectedHands.length === 1 ? this.selectedHands[0] : `${this.selectedHands.length} hands`;
-          if (!confirm(`Clear all data for ${label}?`)) return;
           for (const hand of this.selectedHands) {
-            for (const scenario of SCENARIO_KEYS) {
-              if (this.myRanges[scenario]?.[hand]) {
-                delete this.myRanges[scenario][hand];
-              }
+            if (this.myRanges[scenario]?.[hand]) {
+              delete this.myRanges[scenario][hand];
             }
           }
           localStorage.setItem('myRanges', JSON.stringify(this.myRanges));
+          this.selectedHands = [];
+        },
+        
+        compressRange(hands) {
+          if (!hands || hands.length === 0) return '';
+          
+          const RANKS = 'AKQJT98765432';
+          const rankIndex = r => RANKS.indexOf(r);
+          
+          // Separate into pairs, suited, offsuit
+          const pairs = [];
+          const suited = {};  // keyed by high card
+          const offsuit = {}; // keyed by high card
+          
+          for (const hand of hands) {
+            if (hand.length === 2) {
+              // Pair like "AA"
+              pairs.push(hand[0]);
+            } else if (hand[2] === 's') {
+              // Suited like "AKs"
+              const high = hand[0];
+              const low = hand[1];
+              if (!suited[high]) suited[high] = [];
+              suited[high].push(low);
+            } else {
+              // Offsuit like "AKo"
+              const high = hand[0];
+              const low = hand[1];
+              if (!offsuit[high]) offsuit[high] = [];
+              offsuit[high].push(low);
+            }
+          }
+          
+          const parts = [];
+          
+          // Compress pairs
+          if (pairs.length > 0) {
+            pairs.sort((a, b) => rankIndex(a) - rankIndex(b));
+            parts.push(...this.compressRanks(pairs, r => r + r));
+          }
+          
+          // Compress suited hands by high card
+          for (const high of RANKS) {
+            if (suited[high] && suited[high].length > 0) {
+              suited[high].sort((a, b) => rankIndex(a) - rankIndex(b));
+              parts.push(...this.compressRanks(suited[high], r => high + r + 's'));
+            }
+          }
+          
+          // Compress offsuit hands by high card
+          for (const high of RANKS) {
+            if (offsuit[high] && offsuit[high].length > 0) {
+              offsuit[high].sort((a, b) => rankIndex(a) - rankIndex(b));
+              parts.push(...this.compressRanks(offsuit[high], r => high + r + 'o'));
+            }
+          }
+          
+          return parts.join(', ');
+        },
+        
+        compressRanks(sortedRanks, formatter) {
+          const RANKS = 'AKQJT98765432';
+          const results = [];
+          let i = 0;
+          
+          while (i < sortedRanks.length) {
+            const start = sortedRanks[i];
+            let end = start;
+            
+            // Find consecutive run
+            while (i + 1 < sortedRanks.length) {
+              const curr = RANKS.indexOf(sortedRanks[i]);
+              const next = RANKS.indexOf(sortedRanks[i + 1]);
+              if (next === curr + 1) {
+                end = sortedRanks[i + 1];
+                i++;
+              } else {
+                break;
+              }
+            }
+            
+            if (start === end) {
+              results.push(formatter(start));
+            } else {
+              results.push(formatter(start) + '-' + formatter(end));
+            }
+            i++;
+          }
+          
+          return results;
+        },
+        
+        describeRange(scenario, action) {
+          // Get all hands with this action in this scenario
+          const hands = [];
+          const normalizedAction = action === 'r' ? ['r', '3'] : [action];
+          
+          for (const hand of HAND_LIST) {
+            const myAction = this.getMyAction(scenario, hand);
+            if (normalizedAction.includes(myAction)) {
+              hands.push(hand);
+            }
+          }
+          
+          if (hands.length === 0) return '';
+          if (hands.length === 169) return 'everything';
+          
+          const handSet = new Set(hands);
+          const parts = [];
+          const described = new Set();
+          
+          // Check each hand group
+          for (const [groupName, group] of Object.entries(HAND_GROUPS)) {
+            const allInRange = group.all.filter(h => handSet.has(h));
+            
+            if (allInRange.length === 0) continue;
+            
+            if (allInRange.length === group.all.length) {
+              // All hands in this group are in the range
+              parts.push(groupName.toLowerCase());
+              group.all.forEach(h => described.add(h));
+            } else {
+              // Check subgroups
+              for (const [subName, subHands] of Object.entries(group.subgroups)) {
+                const subInRange = subHands.filter(h => handSet.has(h) && !described.has(h));
+                if (subInRange.length === subHands.length) {
+                  parts.push(`${subName.toLowerCase()} ${groupName.toLowerCase()}`);
+                  subHands.forEach(h => described.add(h));
+                }
+              }
+              
+              // Describe remaining hands from this group
+              const remaining = allInRange.filter(h => !described.has(h));
+              if (remaining.length > 0) {
+                const compressed = this.compressRange(remaining);
+                if (compressed) {
+                  parts.push(compressed);
+                  remaining.forEach(h => described.add(h));
+                }
+              }
+            }
+          }
+          
+          // Describe any hands not in groups
+          const ungrouped = hands.filter(h => !described.has(h));
+          if (ungrouped.length > 0) {
+            const compressed = this.compressRange(ungrouped);
+            if (compressed) {
+              parts.push(compressed);
+            }
+          }
+          
+          return parts.join(', ');
+        },
+        
+        describeRangeList(scenario, action) {
+          // Get all hands with this action in this scenario
+          const hands = [];
+          const normalizedAction = action === 'r' ? ['r', '3'] : [action];
+          
+          for (const hand of HAND_LIST) {
+            const myAction = this.getMyAction(scenario, hand);
+            if (normalizedAction.includes(myAction)) {
+              hands.push(hand);
+            }
+          }
+          
+          if (hands.length === 0) return [];
+          if (hands.length === 169) return ['everything'];
+          
+          const handSet = new Set(hands);
+          const parts = [];
+          const described = new Set();
+          
+          // Check each hand group
+          for (const [groupName, group] of Object.entries(HAND_GROUPS)) {
+            const allInRange = group.all.filter(h => handSet.has(h));
+            
+            if (allInRange.length === 0) continue;
+            
+            if (allInRange.length === group.all.length) {
+              parts.push(groupName.toLowerCase());
+              group.all.forEach(h => described.add(h));
+            } else {
+              // Sort subgroups by size (largest first) to prefer broader matches
+              const sortedSubs = Object.entries(group.subgroups)
+                .sort((a, b) => b[1].length - a[1].length);
+              
+              for (const [subName, subHands] of sortedSubs) {
+                const subInRange = subHands.filter(h => handSet.has(h) && !described.has(h));
+                if (subInRange.length === subHands.length) {
+                  parts.push(`${subName.toLowerCase()} ${groupName.toLowerCase()}`);
+                  subHands.forEach(h => described.add(h));
+                }
+              }
+              
+              const remaining = allInRange.filter(h => !described.has(h));
+              if (remaining.length > 0) {
+                const compressed = this.compressRange(remaining);
+                if (compressed) {
+                  parts.push(compressed);
+                  remaining.forEach(h => described.add(h));
+                }
+              }
+            }
+          }
+          
+          const ungrouped = hands.filter(h => !described.has(h));
+          if (ungrouped.length > 0) {
+            const compressed = this.compressRange(ungrouped);
+            if (compressed) {
+              parts.push(compressed);
+            }
+          }
+          
+          return parts;
         },
         
         getHandActions(hand) {

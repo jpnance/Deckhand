@@ -48,6 +48,78 @@ for (let i = 0; i < 13; i++) {
   }
 }
 
+// Hand groups for quick selection
+const HAND_GROUPS = {
+  'Pocket Pairs': {
+    all: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22'],
+    subgroups: {
+      'Premium': ['AA', 'KK'],
+      'Big': ['QQ', 'JJ', 'TT'],
+      'Medium': ['99', '88', '77', '66'],
+      'Small': ['55', '44', '33', '22']
+    }
+  },
+  'Suited Aces': {
+    all: ['AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s'],
+    subgroups: {
+      'Broadway': ['AKs', 'AQs', 'AJs', 'ATs'],
+      'Wheel': ['A5s', 'A4s', 'A3s', 'A2s'],
+      'Middle': ['A9s', 'A8s', 'A7s', 'A6s']
+    }
+  },
+  'Suited Kings': {
+    all: ['KQs', 'KJs', 'KTs', 'K9s', 'K8s', 'K7s', 'K6s', 'K5s', 'K4s', 'K3s', 'K2s'],
+    subgroups: {
+      'Broadway': ['KQs', 'KJs', 'KTs'],
+      'Low': ['K9s', 'K8s', 'K7s', 'K6s', 'K5s', 'K4s', 'K3s', 'K2s']
+    }
+  },
+  'Suited Broadway': {
+    all: ['AKs', 'AQs', 'AJs', 'KQs', 'KJs', 'QJs', 'ATs', 'KTs', 'QTs', 'JTs'],
+    subgroups: {
+      'Big': ['AKs', 'AQs', 'AJs', 'KQs', 'KJs', 'QJs'],
+      'With Ten': ['ATs', 'KTs', 'QTs', 'JTs']
+    }
+  },
+  'Suited Connectors': {
+    all: ['T9s', '98s', '87s', '76s', '65s', '54s', '43s'],
+    subgroups: {
+      'Big': ['T9s', '98s'],
+      'Medium': ['87s', '76s'],
+      'Small': ['65s', '54s', '43s']
+    }
+  },
+  'Suited Gappers': {
+    all: ['J9s', 'T8s', '97s', '86s', '75s', '64s', '53s', '42s', 'Q9s', 'J8s', 'T7s', '96s', '85s', '74s', '63s', '52s'],
+    subgroups: {
+      '1-gap': ['J9s', 'T8s', '97s', '86s', '75s', '64s', '53s', '42s'],
+      '2-gap': ['Q9s', 'J8s', 'T7s', '96s', '85s', '74s', '63s', '52s']
+    }
+  },
+  'Offsuit Aces': {
+    all: ['AKo', 'AQo', 'AJo', 'ATo', 'A9o', 'A8o', 'A7o', 'A6o', 'A5o', 'A4o', 'A3o', 'A2o'],
+    subgroups: {
+      'Big': ['AKo', 'AQo'],
+      'Broadway': ['AKo', 'AQo', 'AJo', 'ATo'],
+      'Low': ['A9o', 'A8o', 'A7o', 'A6o', 'A5o', 'A4o', 'A3o', 'A2o']
+    }
+  },
+  'Offsuit Kings': {
+    all: ['KQo', 'KJo', 'KTo', 'K9o', 'K8o', 'K7o', 'K6o', 'K5o', 'K4o', 'K3o', 'K2o'],
+    subgroups: {
+      'Broadway': ['KQo', 'KJo', 'KTo'],
+      'Low': ['K9o', 'K8o', 'K7o', 'K6o', 'K5o', 'K4o', 'K3o', 'K2o']
+    }
+  },
+  'Offsuit Broadway': {
+    all: ['AKo', 'AQo', 'AJo', 'KQo', 'KJo', 'QJo', 'ATo', 'KTo', 'QTo', 'JTo'],
+    subgroups: {
+      'Big': ['AKo', 'AQo', 'AJo', 'KQo', 'KJo', 'QJo'],
+      'With Ten': ['ATo', 'KTo', 'QTo', 'JTo']
+    }
+  }
+};
+
 // Equity ranking vs random hand (strongest to weakest)
 // Credit: ProPokerTools.com
 const EQUITY_RANKING = [
