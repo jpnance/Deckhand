@@ -265,7 +265,7 @@
         "sb    lj"
         "btn   hj"
         "co    co";
-      gap: 20px 10px;
+      gap: 28px 10px;
     }
     .seat-UTG { grid-area: utg; justify-self: end; }
     .seat-UTGp1 { grid-area: utg1; justify-self: start; }
@@ -277,22 +277,22 @@
     .seat-HJ { grid-area: hj; justify-self: end; }
     .seat-CO { grid-area: co; justify-self: center; }
     
-    /* Desktop: horizontal oval */
+    /* Desktop: horizontal oval (7-column symmetric layout) */
     @media (min-width: 576px) {
       .poker-table-layout {
-        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
         grid-template-areas:
-          ".     mp    mp    lj    lj    ."
-          "utg1  .     .     .     .     hj"
-          "utg   .     .     .     .     co"
-          ".     bb    sb    sb    btn   .";
-        max-width: 500px;
-        gap: 16px;
+          ".     .     mp    .     lj    .     ."
+          "utg1  .     .     .     .     .     hj"
+          "utg   .     .     .     .     .     co"
+          ".     bb    .     sb    .     btn   .";
+        max-width: 520px;
+        gap: 28px 16px;
       }
       .seat-UTG { justify-self: center; }
       .seat-UTGp1 { justify-self: center; }
-      .seat-MP { grid-area: mp; justify-self: end; }
-      .seat-LJ { grid-area: lj; justify-self: start; }
+      .seat-MP { grid-area: mp; justify-self: center; }
+      .seat-LJ { grid-area: lj; justify-self: center; }
       .seat-HJ { justify-self: center; }
       .seat-CO { justify-self: center; }
       .seat-BB { grid-area: bb; justify-self: center; }
@@ -1170,27 +1170,27 @@
           </div>
         </div>
 
-        <!-- Table Display -->
+        <!-- Table Display (rotated so hero is at bottom-middle) -->
         <div class="poker-table-layout mb-3">
           <template x-for="(pos, i) in positions" :key="i">
             <div class="position-seat"
                  :class="'seat-' + pos.replace('+', 'p') + 
-                   (i === quizYourPosition ? ' you' : '') +
-                   (i === quizRaiserPosition ? ' raiser' : '') +
-                   (quizCallerPositions.includes(i) ? ' caller' : '') +
-                   (i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i) ? ' folded' : '') +
-                   (i > quizYourPosition ? ' waiting' : '')"
+                   (getActualPositionIndex(i) === quizYourPosition ? ' you' : '') +
+                   (getActualPositionIndex(i) === quizRaiserPosition ? ' raiser' : '') +
+                   (quizCallerPositions.includes(getActualPositionIndex(i)) ? ' caller' : '') +
+                   (getActualPositionIndex(i) < quizYourPosition && getActualPositionIndex(i) !== quizRaiserPosition && !quizCallerPositions.includes(getActualPositionIndex(i)) ? ' folded' : '') +
+                   (getActualPositionIndex(i) > quizYourPosition ? ' waiting' : '')"
             >
-              <div class="seat-label" x-show="i === quizRaiserPosition && quizVillainType" x-text="quizVillainType"></div>
-              <div x-text="pos"></div>
+              <div class="seat-label" x-show="getActualPositionIndex(i) === quizRaiserPosition && quizVillainType" x-text="quizVillainType"></div>
+              <div x-text="positions[getActualPositionIndex(i)]"></div>
               <div class="small">
-                <span x-show="i === quizYourPosition">?</span>
-                <span x-show="i === quizRaiserPosition">raise</span>
-                <span x-show="quizCallerPositions.includes(i)">call</span>
-                <span x-show="i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i)">fold</span>
-                <span x-show="i > quizYourPosition && i === 7">½ BB</span>
-                <span x-show="i > quizYourPosition && i === 8">1 BB</span>
-                <span x-show="i > quizYourPosition && i < 7">-</span>
+                <span x-show="getActualPositionIndex(i) === quizYourPosition">?</span>
+                <span x-show="getActualPositionIndex(i) === quizRaiserPosition">raise</span>
+                <span x-show="quizCallerPositions.includes(getActualPositionIndex(i))">call</span>
+                <span x-show="getActualPositionIndex(i) < quizYourPosition && getActualPositionIndex(i) !== quizRaiserPosition && !quizCallerPositions.includes(getActualPositionIndex(i))">fold</span>
+                <span x-show="getActualPositionIndex(i) > quizYourPosition && getActualPositionIndex(i) === 7">½ BB</span>
+                <span x-show="getActualPositionIndex(i) > quizYourPosition && getActualPositionIndex(i) === 8">1 BB</span>
+                <span x-show="getActualPositionIndex(i) > quizYourPosition && getActualPositionIndex(i) < 7">-</span>
               </div>
             </div>
           </template>
@@ -1226,7 +1226,7 @@
 
         <!-- Feedback (only shown on wrong answers) -->
         <div x-show="quizPhase === 'feedback'" class="text-center mb-4">
-          <div class="quiz-feedback wrong mb-3">
+          <div class="quiz-feedback wrong mb-3" @click="nextQuizQuestion()" style="cursor: pointer;">
             Should <strong x-text="quizCorrectActionLabel" style="text-transform: capitalize;"></strong>
           </div>
           
@@ -1238,8 +1238,6 @@
                    x-text="cell.hand"></div>
             </template>
           </div>
-          
-          <button class="btn btn-primary-action" @click="nextQuizQuestion()">Next</button>
         </div>
       </div>
     </template>
@@ -2091,6 +2089,16 @@
             case 'BB': return 8;
             default: return 0;
           }
+        },
+        
+        getQuizRotation() {
+          const heroSlot = 7; // SB's visual position (bottom middle)
+          return (heroSlot - this.quizYourPosition + 9) % 9;
+        },
+        
+        getActualPositionIndex(visualSlot) {
+          const rotation = this.getQuizRotation();
+          return (visualSlot - rotation + 9) % 9;
         },
         
         // Check if CO should be auto-filled (EP and BTN match)
