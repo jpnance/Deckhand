@@ -248,6 +248,58 @@
       white-space: nowrap;
     }
     
+    /* Poker table oval layout */
+    .poker-table-layout {
+      display: grid;
+      justify-items: center;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    
+    /* Mobile portrait: vertical oval */
+    .poker-table-layout {
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "utg   utg1"
+        "bb    mp"
+        "sb    lj"
+        "btn   hj"
+        "co    co";
+      gap: 20px 10px;
+    }
+    .seat-UTG { grid-area: utg; justify-self: end; }
+    .seat-UTGp1 { grid-area: utg1; justify-self: start; }
+    .seat-BB { grid-area: bb; justify-self: start; }
+    .seat-MP { grid-area: mp; justify-self: end; }
+    .seat-SB { grid-area: sb; justify-self: start; }
+    .seat-LJ { grid-area: lj; justify-self: end; }
+    .seat-BTN { grid-area: btn; justify-self: start; }
+    .seat-HJ { grid-area: hj; justify-self: end; }
+    .seat-CO { grid-area: co; justify-self: center; }
+    
+    /* Desktop: horizontal oval */
+    @media (min-width: 576px) {
+      .poker-table-layout {
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+        grid-template-areas:
+          ".     mp    mp    lj    lj    ."
+          "utg1  .     .     .     .     hj"
+          "utg   .     .     .     .     co"
+          ".     bb    sb    sb    btn   .";
+        max-width: 500px;
+        gap: 16px;
+      }
+      .seat-UTG { justify-self: center; }
+      .seat-UTGp1 { justify-self: center; }
+      .seat-MP { grid-area: mp; justify-self: end; }
+      .seat-LJ { grid-area: lj; justify-self: start; }
+      .seat-HJ { justify-self: center; }
+      .seat-CO { justify-self: center; }
+      .seat-BB { grid-area: bb; justify-self: center; }
+      .seat-SB { grid-area: sb; justify-self: center; }
+      .seat-BTN { grid-area: btn; justify-self: center; }
+    }
+    
     .action-btn {
       font-size: 1.1rem;
       padding: 0.75rem 1.5rem;
@@ -727,7 +779,7 @@
     }
     
     @media (max-width: 576px) {
-      .position-seat { min-width: 42px; font-size: 0.7rem; padding: 0.3rem; }
+      .position-seat { /* same size as desktop */ }
       .action-btn { padding: 0.6rem 1rem; font-size: 1rem; min-width: 80px; }
       .grid-cell { font-size: 0.55rem; padding: 2px 0; }
     }
@@ -1119,16 +1171,16 @@
         </div>
 
         <!-- Table Display -->
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+        <div class="poker-table-layout mb-3">
           <template x-for="(pos, i) in positions" :key="i">
             <div class="position-seat"
-                 :class="{
-                   'you': i === quizYourPosition,
-                   'raiser': i === quizRaiserPosition,
-                   'caller': quizCallerPositions.includes(i),
-                   'folded': i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i),
-                   'waiting': i > quizYourPosition
-                 }">
+                 :class="'seat-' + pos.replace('+', 'p') + 
+                   (i === quizYourPosition ? ' you' : '') +
+                   (i === quizRaiserPosition ? ' raiser' : '') +
+                   (quizCallerPositions.includes(i) ? ' caller' : '') +
+                   (i < quizYourPosition && i !== quizRaiserPosition && !quizCallerPositions.includes(i) ? ' folded' : '') +
+                   (i > quizYourPosition ? ' waiting' : '')"
+            >
               <div class="seat-label" x-show="i === quizRaiserPosition && quizVillainType" x-text="quizVillainType"></div>
               <div x-text="pos"></div>
               <div class="small">
