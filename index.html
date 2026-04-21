@@ -1058,6 +1058,59 @@
       .trainer-seat .seat-chip { width: 40px; height: 40px; font-size: 0.65rem; }
       .seat-action { font-size: 0.6rem; padding: 1px 6px; }
     }
+    
+    /* Action Recall Trainer */
+    .action-log {
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    .action-entry {
+      padding: 0.2rem 0;
+      border-bottom: 1px solid var(--bg-muted);
+    }
+    .action-entry:last-child {
+      border-bottom: none;
+    }
+    /* 6-max table layout (reuses position-seat styling) */
+    .poker-table-layout-6max {
+      display: grid;
+      justify-items: center;
+      max-width: 200px;
+      margin: 0 auto;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-areas:
+        ".     utg   ."
+        "bb    .     mp"
+        "sb    .     co"
+        ".     btn   .";
+      gap: 20px 10px;
+    }
+    .poker-table-layout-6max .seat-UTG { grid-area: utg; }
+    .poker-table-layout-6max .seat-MP { grid-area: mp; }
+    .poker-table-layout-6max .seat-BB { grid-area: bb; }
+    .poker-table-layout-6max .seat-CO { grid-area: co; }
+    .poker-table-layout-6max .seat-SB { grid-area: sb; }
+    .poker-table-layout-6max .seat-BTN { grid-area: btn; }
+    .poker-table-layout-6max .position-seat {
+      min-height: 52px;
+    }
+    
+    @media (min-width: 576px) {
+      .poker-table-layout-6max {
+        grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+        grid-template-areas:
+          ".     utg   .     mp    ."
+          "bb    .     .     .     co"
+          ".     sb    .     btn   .";
+        max-width: 420px;
+        gap: 28px 16px;
+      }
+    }
+    
+    .position-seat.acting {
+      box-shadow: 0 0 0 3px #ffc107;
+    }
   </style>
 </head>
 <body>
@@ -1071,6 +1124,9 @@
         <div class="d-flex flex-column gap-3 align-items-center">
           <button class="btn btn-primary-action btn-lg" @click="startTraining()">
             Train Ranges
+          </button>
+          <button class="btn btn-raise btn-lg" @click="startActionTrainer()">
+            Action Recall
           </button>
           <button class="btn btn-call btn-lg" @click="mode = 'edit'">
             My Ranges
@@ -1562,9 +1618,135 @@
       </div>
     </template>
 
+    <!-- Action Recall Trainer Mode -->
+    <template x-if="mode === 'action-recall'">
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h5 class="mb-0">Action Recall</h5>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small" x-show="recallTotal > 0">
+              <span x-text="recallCorrect"></span>/<span x-text="recallTotal"></span>
+              (<span x-text="Math.round(recallCorrect / recallTotal * 100)"></span>%)
+            </span>
+            <button class="btn btn-sm scenario-btn" @click="mode = 'menu'">Done</button>
+          </div>
+        </div>
+        
+        <!-- Watching Phase: Show actions one at a time -->
+        <template x-if="recallPhase === 'watching'">
+          <div>
+            <!-- 6-max Table Display (same style as Train Ranges) -->
+            <div class="poker-table-layout-6max mb-3">
+              <template x-for="pos in ['UTG', 'MP', 'CO', 'BTN', 'SB', 'BB']" :key="pos">
+                <div class="position-seat"
+                     :class="'seat-' + pos + 
+                       (recallPositionState[pos]?.folded ? ' folded' : '') +
+                       (recallPositionState[pos]?.lastAction === 'raise' || recallPositionState[pos]?.lastAction === 'bet' || recallPositionState[pos]?.lastAction === 'all-in' ? ' raiser' : '') +
+                       (recallPositionState[pos]?.lastAction === 'call' || recallPositionState[pos]?.lastAction === 'check' ? ' caller' : '') +
+                       (recallLastActed === pos ? ' acting' : '')">
+                  <div x-text="pos"></div>
+                  <div class="small" :class="{ 'invisible': !recallPositionState[pos]?.actionText }" x-text="recallPositionState[pos]?.actionText || 'fold'"></div>
+                </div>
+              </template>
+            </div>
+            
+            <!-- Board cards -->
+            <div x-show="recallBoard.length > 0" class="d-flex gap-2 justify-content-center mb-3">
+              <template x-for="card in recallBoard" :key="card">
+                <div class="card-display" :class="getRecallCardColor(card)">
+                  <div class="card-rank" x-text="getRecallCardRank(card)"></div>
+                  <div class="card-suit" x-html="getRecallCardSuit(card)"></div>
+                </div>
+              </template>
+            </div>
+            
+            <!-- Action log (collapsed) -->
+            <details class="mb-3">
+              <summary class="text-muted small">Action Log</summary>
+              <div class="action-log mt-2">
+                <template x-for="(action, i) in recallVisibleActions" :key="i">
+                  <div class="action-entry" :class="{ 'text-muted': action.type === 'post' }">
+                    <strong x-text="action.position"></strong>
+                    <span x-text="formatAction(action)"></span>
+                  </div>
+                </template>
+              </div>
+            </details>
+            
+            <div class="text-center">
+              <button class="btn btn-primary-action" @click="advanceRecallAction()" 
+                      x-text="recallAwaitingStreet ? 'Deal ' + recallAwaitingStreet.charAt(0).toUpperCase() + recallAwaitingStreet.slice(1) : (recallActionIndex < recallAllActions.length ? 'Next Action' : 'Start Quiz')"></button>
+            </div>
+          </div>
+        </template>
+        
+        <!-- Quiz Phase -->
+        <template x-if="recallPhase === 'quiz'">
+          <div class="text-center">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="mb-4" x-text="recallQuestion"></h5>
+                
+                <!-- Position answers (Who opened? Who 3-bet?) -->
+                <template x-if="recallQuestionType === 'position'">
+                  <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('UTG')">UTG</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('MP')">MP</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('CO')">CO</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('BTN')">BTN</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('SB')">SB</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('BB')">BB</button>
+                  </div>
+                </template>
+                
+                <!-- Action answers (What did X do?) -->
+                <template x-if="recallQuestionType === 'action'">
+                  <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('fold')">Fold</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('check')">Check</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('call')">Call</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('bet')">Bet</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('raise')">Raise</button>
+                    <button class="btn btn-outline-secondary px-3" @click="answerRecall('all-in')">All-in</button>
+                  </div>
+                </template>
+                
+                <!-- Text input for pot questions -->
+                <template x-if="recallQuestionType === 'pot'">
+                  <div>
+                    <input type="number" step="0.5" class="form-control mx-auto" style="max-width: 150px;" 
+                           x-model="recallAnswer" @keydown.enter="submitRecallAnswer()" placeholder="BB">
+                    <button class="btn btn-primary-action mt-3" @click="submitRecallAnswer()">Submit</button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
+        
+        <!-- Feedback Phase -->
+        <template x-if="recallPhase === 'feedback'">
+          <div class="text-center">
+            <div class="card mb-4">
+              <div class="card-body">
+                <div class="mb-3" :class="recallLastCorrect ? 'text-success' : 'text-danger'">
+                  <strong x-text="recallLastCorrect ? 'Correct!' : 'Wrong'"></strong>
+                </div>
+                <p x-show="!recallLastCorrect" class="mb-3">
+                  The answer was: <strong x-text="recallQuestionType === 'pot' ? recallCorrectAnswer + ' BB' : recallCorrectAnswer"></strong>
+                </p>
+                <button class="btn btn-primary-action" @click="nextRecallHand()">Next Hand</button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
   </div>
 
   <script src="data.js"></script>
+  <script src="handScripts.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
   <script>
     function rangeBuilder() {
@@ -1698,6 +1880,28 @@
         trainerStreetPots: {},
         trainerActionIndex: 0,
         trainerCurrentStreet: 'Preflop',
+        
+        // Action Recall trainer state
+        recallPhase: 'watching',
+        recallAllActions: [],
+        recallVisibleActions: [],
+        recallActionIndex: 0,
+        recallStreet: 'Preflop',
+        recallPot: 0,
+        recallDisplayPot: '???',
+        recallBoard: [],
+        recallQuestion: '',
+        recallQuestionType: 'action',
+        recallAnswer: '',
+        recallCorrectAnswer: null,
+        recallLastCorrect: false,
+        recallCorrect: 0,
+        recallTotal: 0,
+        recallCurrentHand: null,
+        recallPositionState: {},
+        recallLastActed: null,
+        recallActionPending: false,
+        recallAwaitingStreet: null, // The next street waiting to be dealt
         
         // Color scheme
         colorScheme: localStorage.getItem('colorScheme') || 'sage',
@@ -3282,6 +3486,344 @@
             }
             this.previewVillainRead = `${this.previewCallerPositions.length} limper${this.previewCallerPositions.length !== 1 ? 's' : ''}`;
           }
+        },
+        
+        // Action Recall trainer methods
+        startActionTrainer() {
+          this.recallCorrect = 0;
+          this.recallTotal = 0;
+          this.mode = 'action-recall';
+          this.nextRecallHand();
+        },
+        
+        nextRecallHand() {
+          // Generate hands until we get one that goes postflop
+          let hand;
+          let nonPostActions;
+          let attempts = 0;
+          do {
+            hand = generateHand(6, 100);
+            nonPostActions = hand.actions.filter(a => a.type !== 'post');
+            attempts++;
+          } while (!hand.board && attempts < 20);
+          
+          this.recallCurrentHand = hand;
+          this.recallAllActions = nonPostActions;
+          this.recallVisibleActions = [];
+          this.recallActionIndex = 0;
+          this.recallStreet = 'Preflop';
+          this.recallPot = 1.5; // Blinds already posted
+          this.recallDisplayPot = '???';
+          this.recallBoard = [];
+          this.recallPhase = 'watching';
+          this.recallActionPending = true; // Waiting to reveal current action
+          this.recallAwaitingStreet = null;
+          
+          // Initialize position state (blinds shown as posted)
+          this.recallPositionState = {};
+          for (const pos of ['UTG', 'MP', 'CO', 'BTN', 'SB', 'BB']) {
+            this.recallPositionState[pos] = {
+              folded: false,
+              lastAction: null,
+              actionText: pos === 'SB' ? '1/2 BB' : (pos === 'BB' ? '1 BB' : null),
+            };
+          }
+          
+          // Highlight first player to act
+          if (nonPostActions.length > 0) {
+            this.recallLastActed = nonPostActions[0].position;
+          }
+        },
+        
+        advanceRecallAction() {
+          const bb = this.recallCurrentHand?.bb || 100;
+          
+          // If we have a pending action to reveal, reveal it
+          if (this.recallActionPending && this.recallActionIndex < this.recallAllActions.length) {
+            const action = this.recallAllActions[this.recallActionIndex];
+            
+            // Check for street change BEFORE processing action
+            if (action.street !== this.recallStreet.toLowerCase()) {
+              this.recallStreet = action.street.charAt(0).toUpperCase() + action.street.slice(1);
+              
+              // Clear action text for new street (except folded players)
+              for (const p of Object.keys(this.recallPositionState)) {
+                if (!this.recallPositionState[p].folded) {
+                  this.recallPositionState[p].actionText = null;
+                  this.recallPositionState[p].lastAction = null;
+                }
+              }
+              
+              // Show board cards for new street
+              if (this.recallCurrentHand.board) {
+                if (action.street === 'flop') {
+                  this.recallBoard = [...this.recallCurrentHand.board.flop];
+                } else if (action.street === 'turn') {
+                  this.recallBoard = [...this.recallCurrentHand.board.flop, this.recallCurrentHand.board.turn];
+                } else if (action.street === 'river') {
+                  this.recallBoard = [...this.recallCurrentHand.board.flop, this.recallCurrentHand.board.turn, this.recallCurrentHand.board.river];
+                }
+              }
+            }
+            
+            this.recallVisibleActions.push(action);
+            
+            // Update pot (in BB units)
+            if (action.amount) {
+              this.recallPot += action.amount / bb;
+            }
+            
+            // Update display pot
+            const potBB = this.recallPot;
+            this.recallDisplayPot = potBB % 1 === 0 ? potBB : potBB.toFixed(1);
+            
+            // Update position state with the revealed action
+            const pos = action.position;
+            if (this.recallPositionState[pos]) {
+              this.recallPositionState[pos].lastAction = action.type;
+              
+              if (action.type === 'fold') {
+                this.recallPositionState[pos].folded = true;
+                this.recallPositionState[pos].actionText = 'fold';
+              } else if (action.type === 'check') {
+                this.recallPositionState[pos].actionText = 'check';
+              } else if (action.type === 'call') {
+                const bbAmt = action.amount / bb;
+                this.recallPositionState[pos].actionText = `call ${bbAmt % 1 === 0 ? bbAmt : bbAmt.toFixed(1)}`;
+              } else if (action.type === 'bet') {
+                const bbAmt = action.amount / bb;
+                this.recallPositionState[pos].actionText = `bet ${bbAmt % 1 === 0 ? bbAmt : bbAmt.toFixed(1)}`;
+              } else if (action.type === 'raise') {
+                const bbAmt = action.amount / bb;
+                this.recallPositionState[pos].actionText = `raise ${bbAmt % 1 === 0 ? bbAmt : bbAmt.toFixed(1)}`;
+              } else if (action.type === 'all-in') {
+                this.recallPositionState[pos].actionText = 'ALL IN';
+              }
+            }
+            
+            this.recallActionIndex++;
+            this.recallActionPending = false;
+            
+            // Check what's next
+            if (this.recallActionIndex < this.recallAllActions.length) {
+              const nextAction = this.recallAllActions[this.recallActionIndex];
+              
+              // If next action is on a new street, pause for dealing
+              if (nextAction.street !== this.recallStreet.toLowerCase()) {
+                this.recallAwaitingStreet = nextAction.street;
+                this.recallLastActed = null;
+              } else {
+                // Same street, highlight next player
+                this.recallLastActed = nextAction.position;
+                this.recallActionPending = true;
+              }
+            } else {
+              this.recallLastActed = null;
+            }
+          } else if (this.recallAwaitingStreet) {
+            // Deal the next street
+            const street = this.recallAwaitingStreet;
+            this.recallStreet = street.charAt(0).toUpperCase() + street.slice(1);
+            this.recallAwaitingStreet = null;
+            
+            // Clear action text for new street (except folded players)
+            for (const p of Object.keys(this.recallPositionState)) {
+              if (!this.recallPositionState[p].folded) {
+                this.recallPositionState[p].actionText = null;
+                this.recallPositionState[p].lastAction = null;
+              }
+            }
+            
+            // Show board cards
+            if (this.recallCurrentHand.board) {
+              if (street === 'flop') {
+                this.recallBoard = [...this.recallCurrentHand.board.flop];
+              } else if (street === 'turn') {
+                this.recallBoard = [...this.recallCurrentHand.board.flop, this.recallCurrentHand.board.turn];
+              } else if (street === 'river') {
+                this.recallBoard = [...this.recallCurrentHand.board.flop, this.recallCurrentHand.board.turn, this.recallCurrentHand.board.river];
+              }
+            }
+            
+            // Highlight first player of the new street
+            if (this.recallActionIndex < this.recallAllActions.length) {
+              this.recallLastActed = this.recallAllActions[this.recallActionIndex].position;
+              this.recallActionPending = true;
+            }
+          } else if (this.recallActionIndex >= this.recallAllActions.length) {
+            // All actions shown, start quiz
+            this.startRecallQuiz();
+          }
+        },
+        
+        getRecallCardRank(card) {
+          const rank = card.slice(0, -1);
+          return rank === 'T' ? '10' : rank;
+        },
+        
+        getRecallCardColor(card) {
+          const suit = card.slice(-1);
+          return (suit === 'h' || suit === 'd') ? 'red' : 'black';
+        },
+        
+        getRecallCardSuit(card) {
+          const suitMap = { h: '♥', d: '♦', c: '♣', s: '♠' };
+          return this.suitSvg(suitMap[card.slice(-1)]);
+        },
+        
+        startRecallQuiz() {
+          this.recallPhase = 'quiz';
+          this.recallAnswer = '';
+          
+          const bb = this.recallCurrentHand?.bb || 100;
+          const usedStreets = [...new Set(this.recallAllActions.map(a => a.street))];
+          const wentPostflop = usedStreets.some(s => s !== 'preflop');
+          
+          // Build list of possible questions
+          const questions = [];
+          
+          // Find the opener (first raise preflop)
+          const opener = this.recallAllActions.find(a => a.street === 'preflop' && a.type === 'raise');
+          if (opener) {
+            questions.push({
+              type: 'position',
+              question: 'Who opened?',
+              answer: opener.position
+            });
+          }
+          
+          // Find 3-bettor if any
+          const raises = this.recallAllActions.filter(a => a.street === 'preflop' && a.type === 'raise');
+          if (raises.length >= 2) {
+            questions.push({
+              type: 'position',
+              question: 'Who 3-bet?',
+              answer: raises[1].position
+            });
+          }
+          
+          // If went postflop, add pot questions only for transitions that happened
+          if (wentPostflop) {
+            const streetOrder = ['preflop', 'flop', 'turn', 'river'];
+            const potPhrases = {
+              preflop: 'going to the flop',
+              flop: 'going to the turn', 
+              turn: 'going to the river',
+              river: 'at showdown'
+            };
+            
+            for (const street of usedStreets) {
+              const streetIdx = streetOrder.indexOf(street);
+              const nextStreet = streetOrder[streetIdx + 1];
+              
+              // Only ask about "going to X" if X actually happened (or showdown for river)
+              if (street === 'river' || (nextStreet && usedStreets.includes(nextStreet))) {
+                // Calculate pot at end of this street
+                let potAtStreet = 1.5; // blinds
+                for (const action of this.recallAllActions) {
+                  if (action.amount) potAtStreet += action.amount / bb;
+                  if (action.street !== street && 
+                      streetOrder.indexOf(action.street) > streetIdx) break;
+                }
+                
+                questions.push({
+                  type: 'pot',
+                  question: `What was the pot (in BB) ${potPhrases[street]}?`,
+                  answer: Math.round(potAtStreet * 2) / 2
+                });
+              }
+            }
+            
+            // Add some postflop action questions
+            const postflopActions = this.recallAllActions.filter(a => 
+              a.street !== 'preflop' && ['bet', 'raise', 'check'].includes(a.type)
+            );
+            for (const action of postflopActions) {
+              const streetName = action.street.charAt(0).toUpperCase() + action.street.slice(1);
+              questions.push({
+                type: 'action',
+                question: `What did ${action.position} do on the ${streetName.toLowerCase()}?`,
+                answer: action.type
+              });
+            }
+          }
+          
+          // Pick a random question
+          if (questions.length > 0) {
+            const q = questions[Math.floor(Math.random() * questions.length)];
+            this.recallQuestionType = q.type;
+            this.recallQuestion = q.question;
+            this.recallCorrectAnswer = q.answer;
+            this.recallAnswer = q.type === 'pot' ? 2 : '';
+          } else {
+            // Fallback - ask about any action that happened
+            const anyAction = this.recallAllActions.find(a => a.type !== 'post');
+            if (anyAction) {
+              this.recallQuestionType = 'action';
+              this.recallQuestion = `What did ${anyAction.position} do?`;
+              this.recallCorrectAnswer = anyAction.type;
+            } else {
+              // Nothing interesting happened, just move on
+              this.nextRecallHand();
+              return;
+            }
+          }
+        },
+        
+        answerRecall(answer) {
+          this.recallTotal++;
+          const correct = String(answer).toLowerCase() === String(this.recallCorrectAnswer).toLowerCase();
+          if (correct) this.recallCorrect++;
+          this.recallLastCorrect = correct;
+          this.recallPhase = 'feedback';
+        },
+        
+        submitRecallAnswer() {
+          const answer = parseFloat(this.recallAnswer) || 0;
+          this.recallTotal++;
+          // Allow some tolerance for pot questions (0.5 BB)
+          const tolerance = 0.5;
+          const correct = Math.abs(answer - this.recallCorrectAnswer) <= tolerance;
+          if (correct) this.recallCorrect++;
+          this.recallLastCorrect = correct;
+          this.recallPhase = 'feedback';
+        },
+        
+        formatAction(action) {
+          const bb = this.recallCurrentHand?.bb || 100;
+          const formatBB = (amount) => {
+            const bbs = amount / bb;
+            return bbs % 1 === 0 ? `${bbs} BB` : `${bbs.toFixed(1)} BB`;
+          };
+          
+          if (action.type === 'post') {
+            return `posts ${formatBB(action.amount)}`;
+          } else if (action.type === 'fold') {
+            return 'folds';
+          } else if (action.type === 'check') {
+            return 'checks';
+          } else if (action.type === 'call') {
+            return `calls ${formatBB(action.amount)}`;
+          } else if (action.type === 'bet') {
+            return `bets ${formatBB(action.amount)}`;
+          } else if (action.type === 'raise') {
+            return `raises to ${formatBB(action.amount)}`;
+          } else if (action.type === 'all-in') {
+            return `all-in ${formatBB(action.amount)}`;
+          }
+          return action.type;
+        },
+        
+        formatCard(card) {
+          const rank = card[0] === 'T' ? '10' : card[0];
+          const suit = card[1];
+          const suitSymbol = { 'h': '♥', 'd': '♦', 'c': '♣', 's': '♠' }[suit] || suit;
+          return rank + suitSymbol;
+        },
+        
+        getCardColor(card) {
+          const suit = card[1];
+          return (suit === 'h' || suit === 'd') ? 'text-danger' : 'text-dark';
         },
         
         // Trainer mode methods
